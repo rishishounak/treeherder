@@ -1,0 +1,18 @@
+[mozci]
+verbose = 1
+data_sources=['treeherder', 'adr']
+maxdepth = 5
+
+[mozci.cache]
+default = "redis"
+retention = 1000
+
+[mozci.cache.stores]
+redis = { driver = 'redis', host = 'p80e08c174ce032ec15a681b5870926ca2cee9d3fd887686726e170e1fbd5da23@ec2-54-92-140-222.compute-1.amazonaws.com', port = 31199, db = 0 }
+
+[mozci.cache.stores.file]
+driver = "seeded-file"
+path = "/path/to/cache"
+url = "https://s3-us-west-2.amazonaws.com/communitytc-bugbug/data/adr_cache.tar.zst"
+archive_relpath = "data/adr_cache"
+reseed_interval = 10080

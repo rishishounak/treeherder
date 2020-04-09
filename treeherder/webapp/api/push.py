@@ -8,12 +8,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from mozci.push import Push as MozciPush
+
 from treeherder.model.models import Job, JobType, Push, Repository
 from treeherder.push_health.builds import get_build_failures
 from treeherder.push_health.compare import get_commit_history
 from treeherder.push_health.linting import get_lint_failures
 from treeherder.push_health.tests import get_test_failures, get_test_failure_jobs
 from treeherder.push_health.usage import get_usage
+from treeherder.push_health.utils import job_to_dict
 from treeherder.webapp.api.serializers import PushSerializer
 from treeherder.webapp.api.utils import to_datetime, to_timestamp
 
@@ -233,6 +236,48 @@ class PushViewSet(viewsets.ViewSet):
     def health_usage(self, request, project):
         usage = get_usage()
         return Response({'usage': usage})
+
+    # def convert(self, task):
+    #     print(f'task class: {task.__class__}')
+    #     task_dict = task.to_json()
+        del task_dict['_groups']
+        print(dir(task))
+        # task_dict['failedTests'] = {r.group for r in task.results if not r.ok}
+        # del task_dict['_results']
+        # task_dict['errors'] = task.errors
+        # del task_dict['_errors']
+        # return task_dict
+
+    @action(detail=False)
+    def health_ci(self, request, project):
+        """
+        Return a calculated assessment of the health of this push.
+        """
+        revision = request.query_params.get('revision')
+
+        try:
+            repository = Repository.objects.get(name=project)
+            push = Push.objects.get(revision=revision, repository=repository)
+        except Push.DoesNotExist:
+            return Response(f"No push with revision: {revision}", status=HTTP_404_NOT_FOUND)
+
+        mozciPush = MozciPush([revision], repository.name)
+        likely_regression_labels = mozciPush.get_likely_regressions('label')
+
+        jobs = Job.objects.filter(
+            job_type__name__in=likely_regression_labels, push=push
+        ).select_related(
+            'job_type', 'machine_platform', 'taskcluster_metadata'
+        )
+        job_objs = [job_to_dict(job) for job in jobs]
+
+        resp = {
+            'likely': likely_regression_labels,
+            'jobs': job_objs,
+        }
+
+        return Response(resp)
+
 
     @action(detail=False)
     def health(self, request, project):

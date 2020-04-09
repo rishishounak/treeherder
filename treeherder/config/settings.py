@@ -275,6 +275,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'WARNING',
         },
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console', ],
+        # },
     },
 }
 
@@ -480,3 +484,5 @@ PERF_SHERIFF_BOT_ACCESS_TOKEN = env('PERF_SHERIFF_BOT_ACCESS_TOKEN', default=Non
 # This is only used for removing the rate limiting. You can create your own here:
 # https://github.com/settings/tokens
 GITHUB_TOKEN = env("GITHUB_TOKEN", default=None)
+
+MOZCI_CONFIG_PATH = env("MOZCI_CONFIG_PATH", default="config.toml")
