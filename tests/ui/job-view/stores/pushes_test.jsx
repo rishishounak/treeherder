@@ -21,7 +21,7 @@ import {
   CLEAR_PUSHES,
   SET_PUSHES,
   RECALCULATE_UNCLASSIFIED_COUNTS,
-  UPDATE_JOB_MAP,
+  UPDATE_TASK_RUN_MAP,
   initialState,
   reducer,
   fetchPushes,
@@ -255,7 +255,7 @@ describe('Pushes Redux store', () => {
 
     const state = reducer(
       { ...initialState },
-      { type: UPDATE_JOB_MAP, jobList },
+      { type: UPDATE_TASK_RUN_MAP, jobList },
     );
 
     const reduced = reducer(state, { type: RECALCULATE_UNCLASSIFIED_COUNTS });
@@ -269,7 +269,7 @@ describe('Pushes Redux store', () => {
     const { data: jobList } = await JobModel.getList({ push_id: 2 });
     const reduced = reducer(
       { ...initialState },
-      { type: UPDATE_JOB_MAP, jobList },
+      { type: UPDATE_TASK_RUN_MAP, jobList },
     );
 
     expect(Object.keys(reduced.jobMap)).toHaveLength(4);
@@ -279,7 +279,7 @@ describe('Pushes Redux store', () => {
     const { data: jobList } = await JobModel.getList({ push_id: 2 });
     const reduced = reducer(
       { ...initialState },
-      { type: UPDATE_JOB_MAP, jobList },
+      { type: UPDATE_TASK_RUN_MAP, jobList },
     );
 
     expect(Object.keys(reduced.jobMap)).toHaveLength(4);

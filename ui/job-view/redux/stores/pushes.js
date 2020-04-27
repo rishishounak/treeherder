@@ -25,7 +25,7 @@ export const CLEAR_PUSHES = 'CLEAR_PUSHES';
 export const SET_PUSHES = 'SET_PUSHES';
 export const RECALCULATE_UNCLASSIFIED_COUNTS =
   'RECALCULATE_UNCLASSIFIED_COUNTS';
-export const UPDATE_JOB_MAP = 'UPDATE_JOB_MAP';
+export const UPDATE_TASK_RUN_MAP = 'UPDATE_TASK_RUN_MAP';
 
 const DEFAULT_PUSH_COUNT = 10;
 // Keys that, if present on the url, must be passed into the push
@@ -335,7 +335,7 @@ export const recalculateUnclassifiedCounts = filterModel => ({
 });
 
 export const updateJobMap = jobList => ({
-  type: UPDATE_JOB_MAP,
+  type: UPDATE_TASK_RUN_MAP,
   jobList,
 });
 
@@ -397,7 +397,7 @@ export const reducer = (state = initialState, action) => {
       return { ...state, loadingPushes: false, ...pushResults };
     case RECALCULATE_UNCLASSIFIED_COUNTS:
       return { ...state, ...doRecalculateUnclassifiedCounts(jobMap) };
-    case UPDATE_JOB_MAP:
+    case UPDATE_TASK_RUN_MAP:
       return {
         ...state,
         ...doUpdateJobMap(jobList, jobMap, decisionTaskMap, pushList),

@@ -12,30 +12,31 @@ import { getUrlParam, setUrlParam } from '../../../helpers/location';
 import JobModel from '../../../models/job';
 import { getJobsUrl } from '../../../helpers/url';
 
-export const SELECT_JOB = 'SELECT_JOB';
-export const SELECT_JOB_FROM_QUERY_STRING = 'SELECT_JOB_FROM_QUERY_STRING';
-export const CLEAR_JOB = 'CLEAR_JOB';
-export const UPDATE_JOB_DETAILS = 'UPDATE_JOB_DETAILS';
+export const SELECT_TASK_RUN = 'SELECT_TASK_RUN';
+export const SELECT_TASK_RUN_FROM_QUERY_STRING =
+  'SELECT_TASK_RUN_FROM_QUERY_STRING';
+export const CLEAR_TASK_RUN = 'CLEAR_TASK_RUN';
+export const UPDATE_TASK_RUN_DETAILS = 'UPDATE_TASK_RUN_DETAILS';
 
 export const setSelectedTaskRun = (job, updateDetails = true) => ({
-  type: SELECT_JOB,
+  type: SELECT_TASK_RUN,
   job,
   updateDetails,
 });
 
 export const setSelectedTaskRunFromQueryString = (notify, jobMap) => ({
-  type: SELECT_JOB_FROM_QUERY_STRING,
+  type: SELECT_TASK_RUN_FROM_QUERY_STRING,
   notify,
   jobMap,
 });
 
 export const clearSelectedTaskRun = countPinnedJobs => ({
-  type: CLEAR_JOB,
+  type: CLEAR_TASK_RUN,
   countPinnedJobs,
 });
 
 export const updateTaskRunDetails = job => ({
-  type: UPDATE_JOB_DETAILS,
+  type: UPDATE_TASK_RUN_DETAILS,
   job,
   meta: {
     debounce: 'nextJob',
@@ -241,13 +242,13 @@ export const reducer = (state = initialState, action) => {
   const { job, jobMap, countPinnedJobs, updateDetails, notify } = action;
 
   switch (action.type) {
-    case SELECT_JOB:
+    case SELECT_TASK_RUN:
       return doSelectJob(job, updateDetails);
-    case SELECT_JOB_FROM_QUERY_STRING:
+    case SELECT_TASK_RUN_FROM_QUERY_STRING:
       return doSetSelectedJobFromQueryString(notify, jobMap);
-    case UPDATE_JOB_DETAILS:
+    case UPDATE_TASK_RUN_DETAILS:
       return doUpdateJobDetails(job);
-    case CLEAR_JOB:
+    case CLEAR_TASK_RUN:
       return { ...state, ...doClearSelectedJob(countPinnedJobs) };
     default:
       return state;
