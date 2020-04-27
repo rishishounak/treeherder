@@ -12,7 +12,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { thAllResultStatuses } from '../../helpers/constants';
 import { getJobsUrl } from '../../helpers/url';
-import { setSelectedJob, clearSelectedJob } from '../redux/stores/selectedJob';
+import {
+  setSelectedJob,
+  clearSelectedJob,
+} from '../redux/stores/selectedTaskRun';
 import { pinJobs } from '../redux/stores/pinnedJobs';
 
 const resultStatusMenuItems = thAllResultStatuses.filter(

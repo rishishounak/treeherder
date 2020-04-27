@@ -18,7 +18,7 @@ import {
   clearSelectedJob,
   initialState,
   reducer,
-} from '../../../../ui/job-view/redux/stores/selectedJob';
+} from '../../../../ui/job-view/redux/stores/selectedTaskRun';
 import JobGroup from '../../../../ui/job-view/pushes/JobGroup';
 import group from '../../mock/group_with_jobs';
 import { getApiUrl } from '../../../../ui/helpers/url';

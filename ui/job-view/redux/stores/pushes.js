@@ -17,7 +17,7 @@ import { thEvents } from '../../../helpers/constants';
 import { processErrors } from '../../../helpers/http';
 
 import { notify } from './notifications';
-import { setSelectedJob, clearSelectedJob } from './selectedJob';
+import { setSelectedJob, clearSelectedJob } from './selectedTaskRun';
 
 export const LOADING = 'LOADING';
 export const ADD_PUSHES = 'ADD_PUSHES';

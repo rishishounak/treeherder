@@ -10,7 +10,7 @@ import { notify } from '../redux/stores/notifications';
 import {
   clearSelectedJob,
   setSelectedJobFromQueryString,
-} from '../redux/stores/selectedJob';
+} from '../redux/stores/selectedTaskRun';
 import {
   fetchPushes,
   fetchNextPushes,

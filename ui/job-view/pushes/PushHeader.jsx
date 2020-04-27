@@ -22,7 +22,7 @@ import JobModel from '../../models/job';
 import PushHealthStatus from '../../shared/PushHealthStatus';
 import { getUrlParam, setUrlParam } from '../../helpers/location';
 import { notify } from '../redux/stores/notifications';
-import { setSelectedJob } from '../redux/stores/selectedJob';
+import { setSelectedJob } from '../redux/stores/selectedTaskRun';
 import { pinJobs } from '../redux/stores/pinnedJobs';
 
 import PushActionMenu from './PushActionMenu';

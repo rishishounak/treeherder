@@ -13,7 +13,7 @@ import {
   changeJob,
   clearSelectedJob,
   updateJobDetails,
-} from './redux/stores/selectedJob';
+} from './redux/stores/selectedTaskRun';
 import { pinJob, unPinAll } from './redux/stores/pinnedJobs';
 
 const keyMap = {

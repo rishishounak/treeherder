@@ -24,7 +24,7 @@ import BugJobMapModel from '../../models/bugJobMap';
 import JobClassificationModel from '../../models/classification';
 import JobModel from '../../models/job';
 import { notify } from '../redux/stores/notifications';
-import { setSelectedJob } from '../redux/stores/selectedJob';
+import { setSelectedJob } from '../redux/stores/selectedTaskRun';
 import { recalculateUnclassifiedCounts } from '../redux/stores/pushes';
 import {
   addBug,

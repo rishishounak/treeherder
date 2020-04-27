@@ -12,7 +12,7 @@ import {
 
 import { thEvents } from '../../../helpers/constants';
 import JobDetails from '../../../shared/JobDetails';
-import { clearSelectedJob } from '../../redux/stores/selectedJob';
+import { clearSelectedJob } from '../../redux/stores/selectedTaskRun';
 
 import FailureSummaryTab from './failureSummary/FailureSummaryTab';
 import PerformanceTab from './PerformanceTab';

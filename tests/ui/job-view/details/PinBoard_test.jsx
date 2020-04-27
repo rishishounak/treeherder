@@ -19,7 +19,7 @@ import {
   getProjectUrl,
 } from '../../../../ui/helpers/location';
 import configureStore from '../../../../ui/job-view/redux/configureStore';
-import { setSelectedJob } from '../../../../ui/job-view/redux/stores/selectedJob';
+import { setSelectedJob } from '../../../../ui/job-view/redux/stores/selectedTaskRun';
 import { setPushes } from '../../../../ui/job-view/redux/stores/pushes';
 import reposFixture from '../../mock/repositories';
 import KeyboardShortcuts from '../../../../ui/job-view/KeyboardShortcuts';

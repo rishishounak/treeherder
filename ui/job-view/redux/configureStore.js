@@ -2,7 +2,7 @@ import { createStore, combineReducers, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
 import createDebounce from 'redux-debounce';
 
-import * as selectedJobStore from './stores/selectedJob';
+import * as selectedJobStore from './stores/selectedTaskRun';
 import * as notificationStore from './stores/notifications';
 import * as pushesStore from './stores/pushes';
 import * as pinnedJobsStore from './stores/pinnedJobs';
