@@ -24,7 +24,7 @@ import BugJobMapModel from '../../models/bugJobMap';
 import JobClassificationModel from '../../models/classification';
 import JobModel from '../../models/job';
 import { notify } from '../redux/stores/notifications';
-import { setSelectedJob } from '../redux/stores/selectedTaskRun';
+import { setSelectedTaskRun } from '../redux/stores/selectedTaskRun';
 import { recalculateUnclassifiedCounts } from '../redux/stores/pushes';
 import {
   addBug,
@@ -698,7 +698,7 @@ const mapStateToProps = ({
 
 export default connect(mapStateToProps, {
   notify,
-  setSelectedJob,
+  setSelectedJob: setSelectedTaskRun,
   recalculateUnclassifiedCounts,
   addBug,
   removeBug,

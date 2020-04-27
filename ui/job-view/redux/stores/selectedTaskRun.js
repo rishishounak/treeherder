@@ -17,24 +17,24 @@ export const SELECT_JOB_FROM_QUERY_STRING = 'SELECT_JOB_FROM_QUERY_STRING';
 export const CLEAR_JOB = 'CLEAR_JOB';
 export const UPDATE_JOB_DETAILS = 'UPDATE_JOB_DETAILS';
 
-export const setSelectedJob = (job, updateDetails = true) => ({
+export const setSelectedTaskRun = (job, updateDetails = true) => ({
   type: SELECT_JOB,
   job,
   updateDetails,
 });
 
-export const setSelectedJobFromQueryString = (notify, jobMap) => ({
+export const setSelectedTaskRunFromQueryString = (notify, jobMap) => ({
   type: SELECT_JOB_FROM_QUERY_STRING,
   notify,
   jobMap,
 });
 
-export const clearSelectedJob = countPinnedJobs => ({
+export const clearSelectedTaskRun = countPinnedJobs => ({
   type: CLEAR_JOB,
   countPinnedJobs,
 });
 
-export const updateJobDetails = job => ({
+export const updateTaskRunDetails = job => ({
   type: UPDATE_JOB_DETAILS,
   job,
   meta: {

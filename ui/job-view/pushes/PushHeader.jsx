@@ -22,7 +22,7 @@ import JobModel from '../../models/job';
 import PushHealthStatus from '../../shared/PushHealthStatus';
 import { getUrlParam, setUrlParam } from '../../helpers/location';
 import { notify } from '../redux/stores/notifications';
-import { setSelectedJob } from '../redux/stores/selectedTaskRun';
+import { setSelectedTaskRun } from '../redux/stores/selectedTaskRun';
 import { pinJobs } from '../redux/stores/pinnedJobs';
 
 import PushActionMenu from './PushActionMenu';
@@ -411,6 +411,8 @@ const mapStateToProps = ({ pushes: { decisionTaskMap } }) => ({
   decisionTaskMap,
 });
 
-export default connect(mapStateToProps, { notify, setSelectedJob, pinJobs })(
-  PushHeader,
-);
+export default connect(mapStateToProps, {
+  notify,
+  setSelectedJob: setSelectedTaskRun,
+  pinJobs,
+})(PushHeader);

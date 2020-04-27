@@ -13,9 +13,9 @@ import {
 } from '../../../../ui/helpers/location';
 import FilterModel from '../../../../ui/models/filter';
 import {
-  setSelectedJob,
-  setSelectedJobFromQueryString,
-  clearSelectedJob,
+  setSelectedTaskRun,
+  setSelectedTaskRunFromQueryString,
+  clearSelectedTaskRun,
   initialState,
   reducer,
 } from '../../../../ui/job-view/redux/stores/selectedTaskRun';
@@ -73,7 +73,7 @@ describe('SelectedJob Redux store', () => {
 
     const reduced = reducer(
       { selectedJob: { initialState } },
-      setSelectedJob(group.jobs[0], true),
+      setSelectedTaskRun(group.jobs[0], true),
     );
 
     expect(reduced.selectedJob).toEqual(group.jobs[0]);
@@ -88,7 +88,7 @@ describe('SelectedJob Redux store', () => {
     render(testJobGroup(store, group, new FilterModel()));
     const reduced = reducer(
       { selectedJob: { initialState } },
-      setSelectedJobFromQueryString(() => {}, jobMap),
+      setSelectedTaskRunFromQueryString(() => {}, jobMap),
     );
 
     expect(reduced.selectedJob).toEqual(group.jobs[0]);
@@ -101,7 +101,7 @@ describe('SelectedJob Redux store', () => {
 
     const reduced = await reducer(
       { selectedJob: { initialState } },
-      setSelectedJobFromQueryString(msg => notifications.push(msg), jobMap),
+      setSelectedTaskRunFromQueryString(msg => notifications.push(msg), jobMap),
     );
 
     expect(reduced.selectedJob).toBeUndefined();
@@ -119,7 +119,7 @@ describe('SelectedJob Redux store', () => {
 
     const reduced = await reducer(
       { selectedJob: { initialState } },
-      setSelectedJobFromQueryString(msg => notifications.push(msg), jobMap),
+      setSelectedTaskRunFromQueryString(msg => notifications.push(msg), jobMap),
     );
 
     expect(reduced.selectedJob).toBeUndefined();
@@ -137,7 +137,7 @@ describe('SelectedJob Redux store', () => {
 
     const reduced = reducer(
       { selectedJob: { selectedJob: group.jobs[0] } },
-      clearSelectedJob(0),
+      clearSelectedTaskRun(0),
     );
 
     expect(reduced.selectedJob).toBeNull();

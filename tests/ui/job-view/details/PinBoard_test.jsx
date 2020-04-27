@@ -19,7 +19,7 @@ import {
   getProjectUrl,
 } from '../../../../ui/helpers/location';
 import configureStore from '../../../../ui/job-view/redux/configureStore';
-import { setSelectedJob } from '../../../../ui/job-view/redux/stores/selectedTaskRun';
+import { setSelectedTaskRun } from '../../../../ui/job-view/redux/stores/selectedTaskRun';
 import { setPushes } from '../../../../ui/job-view/redux/stores/pushes';
 import reposFixture from '../../mock/repositories';
 import KeyboardShortcuts from '../../../../ui/job-view/KeyboardShortcuts';
@@ -104,7 +104,7 @@ describe('DetailsPanel', () => {
 
   test('pin selected job with button', async () => {
     const { getByTitle } = render(testDetailsPanel(store));
-    store.dispatch(setSelectedJob(jobList.data[1], true));
+    store.dispatch(setSelectedTaskRun(jobList.data[1], true));
 
     fireEvent.click(await waitForElement(() => getByTitle('Pin job')));
 
@@ -120,7 +120,7 @@ describe('DetailsPanel', () => {
 
   test('pin selected job with keyboard', async () => {
     const { getByTitle, getByTestId } = render(testDetailsPanel(store));
-    store.dispatch(setSelectedJob(jobList.data[1], true));
+    store.dispatch(setSelectedTaskRun(jobList.data[1], true));
 
     const hotkeys = await waitForElement(() => getByTestId('hot-keys-id'));
     const keyDownEvent = new Event('keydown');
@@ -139,7 +139,7 @@ describe('DetailsPanel', () => {
 
   test('clear Pinboard', async () => {
     const { getByTitle, getByText } = render(testDetailsPanel(store));
-    store.dispatch(setSelectedJob(jobList.data[1], true));
+    store.dispatch(setSelectedTaskRun(jobList.data[1], true));
 
     fireEvent.click(await waitForElement(() => getByTitle('Pin job')));
 

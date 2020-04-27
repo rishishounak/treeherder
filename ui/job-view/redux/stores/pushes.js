@@ -17,7 +17,7 @@ import { thEvents } from '../../../helpers/constants';
 import { processErrors } from '../../../helpers/http';
 
 import { notify } from './notifications';
-import { setSelectedJob, clearSelectedJob } from './selectedTaskRun';
+import { setSelectedTaskRun, clearSelectedTaskRun } from './selectedTaskRun';
 
 export const LOADING = 'LOADING';
 export const ADD_PUSHES = 'ADD_PUSHES';
@@ -157,7 +157,7 @@ const fetchNewJobs = () => {
         }),
       );
       if (updatedSelectedJob) {
-        dispatch(setSelectedJob(updatedSelectedJob));
+        dispatch(setSelectedTaskRun(updatedSelectedJob));
       }
     } else {
       for (const error of errors) {
@@ -358,7 +358,7 @@ export const updateRange = range => {
           job.push_id === pushId ? { ...acc, [id]: job } : acc,
         {},
       );
-      dispatch(clearSelectedJob(0));
+      dispatch(clearSelectedTaskRun(0));
       // We already have the one revision they're looking for,
       // so we can just erase everything else.
       dispatch(setPushes(revisionPushList, revisionJobMap));

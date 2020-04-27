@@ -8,8 +8,8 @@ import isEqual from 'lodash/isEqual';
 import ErrorBoundary from '../../shared/ErrorBoundary';
 import { notify } from '../redux/stores/notifications';
 import {
-  clearSelectedJob,
-  setSelectedJobFromQueryString,
+  clearSelectedTaskRun,
+  setSelectedTaskRunFromQueryString,
 } from '../redux/stores/selectedTaskRun';
 import {
   fetchPushes,
@@ -251,8 +251,8 @@ const mapStateToProps = ({
 
 export default connect(mapStateToProps, {
   notify,
-  clearSelectedJob,
-  setSelectedJobFromQueryString,
+  clearSelectedJob: clearSelectedTaskRun,
+  setSelectedJobFromQueryString: setSelectedTaskRunFromQueryString,
   fetchNextPushes,
   fetchPushes,
   updateRange,

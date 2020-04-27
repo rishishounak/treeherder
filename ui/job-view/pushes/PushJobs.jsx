@@ -10,7 +10,7 @@ import { getUrlParam } from '../../helpers/location';
 import { didObjectsChange } from '../../helpers/object';
 import { getLogViewerUrl } from '../../helpers/url';
 import JobModel from '../../models/job';
-import { setSelectedJob } from '../redux/stores/selectedTaskRun';
+import { setSelectedTaskRun } from '../redux/stores/selectedTaskRun';
 import { togglePinJob } from '../redux/stores/pinnedJobs';
 
 import Platform from './Platform';
@@ -160,4 +160,7 @@ PushJobs.propTypes = {
   filterModel: PropTypes.shape({}).isRequired,
 };
 
-export default connect(null, { setSelectedJob, togglePinJob })(PushJobs);
+export default connect(null, {
+  setSelectedJob: setSelectedTaskRun,
+  togglePinJob,
+})(PushJobs);

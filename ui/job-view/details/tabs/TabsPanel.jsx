@@ -12,7 +12,7 @@ import {
 
 import { thEvents } from '../../../helpers/constants';
 import JobDetails from '../../../shared/JobDetails';
-import { clearSelectedJob } from '../../redux/stores/selectedTaskRun';
+import { clearSelectedTaskRun } from '../../redux/stores/selectedTaskRun';
 
 import FailureSummaryTab from './failureSummary/FailureSummaryTab';
 import PerformanceTab from './PerformanceTab';
@@ -263,4 +263,6 @@ const mapStateToProps = ({
   pinnedJobs: { pinnedJobs, isPinBoardVisible },
 }) => ({ pinnedJobs, isPinBoardVisible });
 
-export default connect(mapStateToProps, { clearSelectedJob })(TabsPanel);
+export default connect(mapStateToProps, {
+  clearSelectedJob: clearSelectedTaskRun,
+})(TabsPanel);

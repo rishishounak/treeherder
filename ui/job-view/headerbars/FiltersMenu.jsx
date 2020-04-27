@@ -13,8 +13,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { thAllResultStatuses } from '../../helpers/constants';
 import { getJobsUrl } from '../../helpers/url';
 import {
-  setSelectedJob,
-  clearSelectedJob,
+  setSelectedTaskRun,
+  clearSelectedTaskRun,
 } from '../redux/stores/selectedTaskRun';
 import { pinJobs } from '../redux/stores/pinnedJobs';
 
@@ -148,7 +148,7 @@ FiltersMenu.defaultProps = {
 const mapStateToProps = ({ selectedJob: { selectedJob } }) => ({ selectedJob });
 
 export default connect(mapStateToProps, {
-  setSelectedJob,
-  clearSelectedJob,
+  setSelectedJob: setSelectedTaskRun,
+  clearSelectedJob: clearSelectedTaskRun,
   pinJobs,
 })(FiltersMenu);

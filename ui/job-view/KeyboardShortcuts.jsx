@@ -11,8 +11,8 @@ import {
 } from './redux/stores/notifications';
 import {
   changeJob,
-  clearSelectedJob,
-  updateJobDetails,
+  clearSelectedTaskRun,
+  updateTaskRunDetails,
 } from './redux/stores/selectedTaskRun';
 import { pinJob, unPinAll } from './redux/stores/pinnedJobs';
 
@@ -290,8 +290,8 @@ const mapStateToProps = ({
 export default connect(mapStateToProps, {
   clearAllOnScreenNotifications,
   notify,
-  updateJobDetails,
-  clearSelectedJob,
+  updateJobDetails: updateTaskRunDetails,
+  clearSelectedJob: clearSelectedTaskRun,
   pinJob,
   unPinAll,
 })(KeyboardShortcuts);
