@@ -101,14 +101,14 @@ function FiltersMenu(props) {
         <DropdownItem divider />
         <DropdownItem
           tag="a"
-          title="Pin all jobs that pass the global filters"
+          title="Pin all Task Runs that pass the global filters"
           onClick={pinAllShownJobs}
         >
           Pin all showing
         </DropdownItem>
         <DropdownItem
           tag="a"
-          title="Show only superseded jobs"
+          title="Show only superseded Task Runs"
           onClick={filterModel.setOnlySuperseded}
         >
           Superseded only

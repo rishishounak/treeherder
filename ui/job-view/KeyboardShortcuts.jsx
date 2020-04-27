@@ -166,7 +166,7 @@ class KeyboardShortcuts extends React.Component {
 
   changeSelectedJob = (direction, unclassifiedOnly) => {
     // Select the next job without updating the details panel.  That is debounced so
-    // it doesn't do too much updating while quickly switching between jobs.
+    // it doesn't do too much updating while quickly switching between taskRuns.
     const { updateJobDetails, notify, pinnedJobs } = this.props;
     const { selectedJob } = changeJob(
       direction,

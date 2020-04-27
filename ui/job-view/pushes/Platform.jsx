@@ -57,7 +57,7 @@ export default class Platform extends React.PureComponent {
     filteredPlatform.visible = false;
     filteredPlatform.groups.forEach(group => {
       group.visible = false;
-      group.jobs.forEach(job => {
+      group.taskRuns.forEach(job => {
         job.visible =
           filterModel.showJob(job) || job.task_run === selectedTaskRun;
         if (job.state === 'runnable') {

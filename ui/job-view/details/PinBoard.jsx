@@ -87,9 +87,11 @@ class PinBoard extends React.Component {
       errorFree = false;
     }
     if (errorFree) {
-      const jobs = Object.values(pinnedJobs);
-      const classifyPromises = jobs.map(job => this.saveClassification(job));
-      const bugPromises = jobs.map(job => this.saveBugs(job));
+      const taskRuns = Object.values(pinnedJobs);
+      const classifyPromises = taskRuns.map(job =>
+        this.saveClassification(job),
+      );
+      const bugPromises = taskRuns.map(job => this.saveBugs(job));
       Promise.all([...classifyPromises, ...bugPromises]).then(() => {
         window.dispatchEvent(new CustomEvent(thEvents.classificationChanged));
         recalculateUnclassifiedCounts();
@@ -123,12 +125,12 @@ class PinBoard extends React.Component {
   };
 
   saveClassification = async pinnedJob => {
-    const { recalculateUnclassifiedCounts, notify, jobMap } = this.props;
+    const { recalculateUnclassifiedCounts, notify, taskRunMap } = this.props;
     const classification = this.createNewClassification();
     // Ensure the version of the job we have is the one that is displayed in
     // the main job field.  Not the "full" selected job instance only shown in
     // the job details panel.
-    const job = jobMap[pinnedJob.id];
+    const job = taskRunMap[pinnedJob.id];
 
     // classification can be left unset making this a no-op
     if (classification.failure_classification_id > 0) {
@@ -197,10 +199,10 @@ class PinBoard extends React.Component {
     }
 
     if (!this.canCancelAllPinnedJobs()) {
-      return 'No pending / running jobs in pinBoard';
+      return 'No pending / running Task Runs in pinBoard';
     }
 
-    return 'Cancel all the pinned jobs';
+    return 'Cancel all the pinned Task Runs';
   };
 
   canCancelAllPinnedJobs = () => {
@@ -215,7 +217,9 @@ class PinBoard extends React.Component {
     const { notify, currentRepo, pinnedJobs, decisionTaskMap } = this.props;
 
     if (
-      window.confirm('This will cancel all the selected jobs. Are you sure?')
+      window.confirm(
+        'This will cancel all the selected Task Runs. Are you sure?',
+      )
     ) {
       JobModel.cancel(
         Object.values(pinnedJobs),
@@ -248,7 +252,7 @@ class PinBoard extends React.Component {
     );
   };
 
-  // Facilitates Clear all if no jobs pinned to reset pinBoard UI
+  // Facilitates Clear all if no taskRuns pinned to reset pinBoard UI
   pinboardIsDirty = () => {
     const {
       failureClassificationId,
@@ -275,9 +279,9 @@ class PinBoard extends React.Component {
         title = title.concat('ineligible classification data / ');
       }
       if (!this.hasPinnedJobs()) {
-        title = title.concat('no pinned jobs');
+        title = title.concat('no pinned Task Runs');
       }
-      // We don't check pinned jobs because the menu dropdown handles it
+      // We don't check pinned taskRuns because the menu dropdown handles it
     } else if (category === 'bug') {
       if (!this.hasPinnedJobBugs()) {
         title = title.concat('no related bugs');
@@ -369,9 +373,9 @@ class PinBoard extends React.Component {
 
   retriggerAllPinnedJobs = async () => {
     const { pinnedJobs, notify, currentRepo, decisionTaskMap } = this.props;
-    const jobs = Object.values(pinnedJobs);
+    const taskRuns = Object.values(pinnedJobs);
 
-    JobModel.retrigger(jobs, currentRepo, notify, 1, decisionTaskMap);
+    JobModel.retrigger(taskRuns, currentRepo, notify, 1, decisionTaskMap);
   };
 
   render() {
@@ -578,7 +582,7 @@ class PinBoard extends React.Component {
           <div
             id="pinboard-controls"
             className="btn-group-vertical"
-            title={this.hasPinnedJobs() ? '' : 'No pinned jobs'}
+            title={this.hasPinnedJobs() ? '' : 'No pinned Task Runs'}
           >
             <ButtonGroup className="save-btn-group">
               <Button
@@ -605,7 +609,7 @@ class PinBoard extends React.Component {
                   }`}
                   title={
                     !this.hasPinnedJobs() && !this.pinboardIsDirty()
-                      ? 'No pinned jobs'
+                      ? 'No pinned Task Runs'
                       : 'Additional pinboard functions'
                   }
                   outline
@@ -614,7 +618,9 @@ class PinBoard extends React.Component {
                   <DropdownItem
                     tag="a"
                     title={
-                      !isLoggedIn ? 'Not logged in' : 'Repeat the pinned jobs'
+                      !isLoggedIn
+                        ? 'Not logged in'
+                        : 'Repeat the pinned Task Runs'
                     }
                     className={!isLoggedIn ? 'disabled' : ''}
                     onClick={() => !isLoggedIn || this.retriggerAllPinnedJobs()}
@@ -648,7 +654,7 @@ class PinBoard extends React.Component {
 PinBoard.propTypes = {
   recalculateUnclassifiedCounts: PropTypes.func.isRequired,
   decisionTaskMap: PropTypes.shape({}).isRequired,
-  jobMap: PropTypes.shape({}).isRequired,
+  taskRunMap: PropTypes.shape({}).isRequired,
   classificationTypes: PropTypes.arrayOf(PropTypes.object).isRequired,
   isLoggedIn: PropTypes.bool.isRequired,
   isPinBoardVisible: PropTypes.bool.isRequired,
@@ -677,7 +683,7 @@ PinBoard.defaultProps = {
 };
 
 const mapStateToProps = ({
-  pushes: { revisionTips, decisionTaskMap, jobMap },
+  pushes: { revisionTips, decisionTaskMap, taskRunMap },
   pinnedJobs: {
     isPinBoardVisible,
     pinnedJobs,
@@ -688,7 +694,7 @@ const mapStateToProps = ({
 }) => ({
   revisionTips,
   decisionTaskMap,
-  jobMap,
+  taskRunMap,
   isPinBoardVisible,
   pinnedJobs,
   pinnedJobBugs,

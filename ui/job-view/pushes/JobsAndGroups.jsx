@@ -35,7 +35,7 @@ export default class JobsAndGroups extends React.Component {
               )
             );
           }
-          return group.jobs.map(job => (
+          return group.taskRuns.map(job => (
             <JobButton
               job={job}
               filterModel={filterModel}

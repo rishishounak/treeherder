@@ -100,9 +100,9 @@ class Push extends React.PureComponent {
   }
 
   async componentDidMount() {
-    // if ``nojobs`` is on the query string, then don't load jobs.
+    // if ``nojobs`` is on the query string, then don't load taskRuns.
     // this allows someone to more quickly load ranges of revisions
-    // when they don't care about the specific jobs and results.
+    // when they don't care about the specific taskRuns and results.
     const allParams = getAllUrlParams();
     if (!allParams.has('nojobs')) {
       await this.fetchJobs();
@@ -200,8 +200,8 @@ class Push extends React.PureComponent {
 
   handleApplyNewJobs = event => {
     const { push } = this.props;
-    const { jobs } = event.detail;
-    const jobList = jobs[push.id];
+    const { taskRuns } = event.detail;
+    const jobList = taskRuns[push.id];
 
     if (jobList) {
       this.mapPushJobs(jobList);
@@ -265,20 +265,20 @@ class Push extends React.PureComponent {
     }
   };
 
-  mapPushJobs = (jobs, skipJobMap) => {
+  mapPushJobs = (taskRuns, skipJobMap) => {
     const { updateJobMap, recalculateUnclassifiedCounts, push } = this.props;
     const { taskNameToTestPaths = {} } = this.state;
 
-    // whether or not we got any jobs for this push, the operation to fetch
+    // whether or not we got any taskRuns for this push, the operation to fetch
     // them has completed.
-    push.jobsLoaded = true;
-    if (jobs.length > 0) {
+    push.taskRunsLoaded = true;
+    if (taskRuns.length > 0) {
       const { jobList } = this.state;
-      const newIds = jobs.map(job => job.id);
-      // remove old versions of jobs we just fetched.
+      const newIds = taskRuns.map(job => job.id);
+      // remove old versions of taskRuns we just fetched.
       const existingJobs = jobList.filter(job => !newIds.includes(job.id));
       // Join both lists and add test_paths and task_run property
-      const newJobList = [...existingJobs, ...jobs].map(job => {
+      const newJobList = [...existingJobs, ...taskRuns].map(job => {
         job.test_paths = taskNameToTestPaths[job.job_type_name] || [];
         job.task_run = getTaskRunStr(job);
         return job;
@@ -294,14 +294,14 @@ class Push extends React.PureComponent {
         jobCounts,
       });
       if (!skipJobMap) {
-        updateJobMap(jobs);
+        updateJobMap(taskRuns);
       }
       recalculateUnclassifiedCounts();
     }
   };
 
   /*
-   * Convert a flat list of jobs into a structure grouped by platform and job_group.
+   * Convert a flat list of taskRuns into a structure grouped by platform and job_group.
    */
   groupJobByPlatform = jobList => {
     const platforms = [];
@@ -333,10 +333,10 @@ class Push extends React.PureComponent {
           groupInfo.symbol === group.symbol && groupInfo.tier === group.tier,
       );
       if (group === undefined) {
-        group = { ...groupInfo, jobs: [] };
+        group = { ...groupInfo, taskRuns: [] };
         platform.groups.push(group);
       }
-      group.jobs.push(job);
+      group.taskRuns.push(job);
     });
     return platforms;
   };
@@ -344,7 +344,7 @@ class Push extends React.PureComponent {
   sortGroupedJobs = platforms => {
     platforms.forEach(platform => {
       platform.groups.forEach(group => {
-        group.jobs = sortBy(group.jobs, job =>
+        group.taskRuns = sortBy(group.taskRuns, job =>
           // Symbol could be something like 1, 2 or 3. Or A, B, C or R1, R2, R10.
           // So this will pad the numeric portion with 0s like R001, R010, etc.
           job.job_type_symbol.replace(/([\D]*)([\d]*)/g, (matcher, s1, s2) =>
@@ -406,7 +406,7 @@ class Push extends React.PureComponent {
         this.setState({ watched: 'none' });
       } else if (watched === 'job' && lastCompleted < nextCompleted) {
         const completeCount = nextCompleted - lastCompleted;
-        message = `${completeCount} jobs completed`;
+        message = `${completeCount} Task Runs completed`;
       }
 
       if (message) {
@@ -439,13 +439,13 @@ class Push extends React.PureComponent {
       });
 
       if (jobList.length === 0) {
-        notify('No new jobs available');
+        notify('No new Task Runs available');
       }
       this.mapPushJobs(jobList, true);
       this.setState({ runnableVisible: jobList.length > 0 });
     } catch (error) {
       notify(
-        `Error fetching runnable jobs: Failed to fetch task ID (${error})`,
+        `Error fetching runnable Task Runs: Failed to fetch task ID (${error})`,
         'danger',
       );
     }
@@ -479,7 +479,7 @@ class Push extends React.PureComponent {
       test-verify|test-windows10-64-ux|toolchain|upload-generated-sources)`;
 
     try {
-      notify('Fetching runnable jobs... This could take a while...');
+      notify('Fetching runnable Task Runs... This could take a while...');
       let fuzzyJobList = await RunnableJobModel.getList(currentRepo, {
         decisionTask: decisionTaskMap[push.id],
       });
@@ -504,7 +504,7 @@ class Push extends React.PureComponent {
       this.toggleFuzzyModal();
     } catch (error) {
       notify(
-        `Error fetching runnable jobs: Failed to fetch task ID (${error})`,
+        `Error fetching runnable Task Runs: Failed to fetch task ID (${error})`,
         'danger',
       );
     }

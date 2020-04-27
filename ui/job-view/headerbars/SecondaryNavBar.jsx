@@ -277,15 +277,15 @@ class SecondaryNavBar extends React.PureComponent {
 
             {/* Toggle Duplicate Jobs */}
             <Button
-              className={`btn btn-view-nav btn-sm btn-toggle-duplicate-jobs bg-transparent border border-0 ${
+              className={`btn btn-view-nav btn-sm btn-toggle-duplicate-task-runs bg-transparent border border-0 ${
                 groupCountsExpanded ? 'disabled' : ''
               } ${!duplicateJobsVisible ? 'strikethrough' : ''}`}
               tabIndex="0"
               role="button"
               title={
                 duplicateJobsVisible
-                  ? 'Hide duplicate jobs'
-                  : 'Show duplicate jobs'
+                  ? 'Hide duplicate Task Runs'
+                  : 'Show duplicate Task Runs'
               }
               onClick={() =>
                 !groupCountsExpanded && this.toggleShowDuplicateJobs()
@@ -371,7 +371,7 @@ class SecondaryNavBar extends React.PureComponent {
                 onChange={evt => this.setSearchStr(evt)}
                 onKeyDown={evt => this.search(evt)}
                 type="text"
-                placeholder="Filter platforms & jobs"
+                placeholder="Filter platforms & Task Runs"
               />
               <FontAwesomeIcon
                 id="quick-filter-clear-button"

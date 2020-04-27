@@ -16,7 +16,7 @@ import { getPushHealthUrl, getCompareChooserUrl } from '../../helpers/url';
 import { notify } from '../redux/stores/notifications';
 import { thEvents } from '../../helpers/constants';
 
-// Trigger missing jobs is dangerous on repos other than these (see bug 1335506)
+// Trigger missing taskRuns is dangerous on repos other than these (see bug 1335506)
 const triggerMissingRepos = ['mozilla-inbound', 'autoland'];
 
 class PushActionMenu extends React.PureComponent {
@@ -70,7 +70,7 @@ class PushActionMenu extends React.PureComponent {
 
     if (
       !window.confirm(
-        `This will trigger all missing jobs for revision ${revision}!\n\nClick "OK" if you want to proceed.`,
+        `This will trigger all missing Task Runs for revision ${revision}!\n\nClick "OK" if you want to proceed.`,
       )
     ) {
       return;
@@ -130,26 +130,26 @@ class PushActionMenu extends React.PureComponent {
             ) : (
               <DropdownItem
                 tag="a"
-                title="Add new jobs to this push"
+                title="Add new Task Runs to this push"
                 onClick={showRunnableJobs}
               >
-                Add new jobs
+                Add new Task Runs
               </DropdownItem>
             )}
             <DropdownItem
               tag="a"
-              title="Add new jobs to this push via a fuzzy search"
+              title="Add new Task Runs to this push via a fuzzy search"
               onClick={showFuzzyJobs}
             >
-              Add new jobs (Search)
+              Add new Task Runs (Search)
             </DropdownItem>
             {triggerMissingRepos.includes(currentRepo.name) && (
               <DropdownItem
                 tag="a"
-                title="Trigger all jobs that were optimized away"
+                title="Trigger all Task Runs that were optimized away"
                 onClick={this.triggerMissingJobs}
               >
-                Trigger missing jobs
+                Trigger missing Task Runs
               </DropdownItem>
             )}
             <DropdownItem

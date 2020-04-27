@@ -74,7 +74,7 @@ function PushCounts(props) {
       <span className="push-progress">
         {percentComplete === 100 && <span>- Complete -</span>}
         {percentComplete < 100 && total > 0 && (
-          <span title="Proportion of jobs that are complete">
+          <span title="Proportion of Task Runs that are complete">
             {percentComplete}% - {inProgress} in progress
           </span>
         )}
@@ -154,7 +154,7 @@ class PushHeader extends React.Component {
 
     if (
       !window.confirm(
-        'This will trigger all selected jobs. Click "OK" if you want to proceed.',
+        'This will trigger all selected Task Runs. Click "OK" if you want to proceed.',
       )
     ) {
       return;
@@ -175,7 +175,7 @@ class PushHeader extends React.Component {
   cancelAllJobs = () => {
     if (
       window.confirm(
-        'This will cancel all pending and running jobs for this push. It cannot be undone! Are you sure?',
+        'This will cancel all pending and running Task Runs for this push. It cannot be undone! Are you sure?',
       )
     ) {
       const { notify, push, decisionTaskMap, currentRepo } = this.props;
@@ -209,7 +209,7 @@ class PushHeader extends React.Component {
         }
       });
     } else {
-      notify('No jobs available to pin', 'danger');
+      notify('No Task Runs available to pin', 'danger');
     }
   };
 
@@ -251,7 +251,7 @@ class PushHeader extends React.Component {
       currentRepo,
       pushHealthStatusCallback,
     } = this.props;
-    const cancelJobsTitle = 'Cancel all jobs';
+    const cancelJobsTitle = 'Cancel all Task Runs';
     const linkParams = this.getLinkParams();
     const revisionPushFilterUrl = getJobsUrl({ ...linkParams, revision });
     const authorPushFilterUrl = getJobsUrl({ ...linkParams, author });
@@ -323,7 +323,7 @@ class PushHeader extends React.Component {
             )}
             <button
               type="button"
-              className="btn btn-sm btn-push cancel-all-jobs-btn"
+              className="btn btn-sm btn-push cancel-all-task-runs-btn"
               title={cancelJobsTitle}
               onClick={this.cancelAllJobs}
               aria-label={cancelJobsTitle}
@@ -331,22 +331,22 @@ class PushHeader extends React.Component {
               <FontAwesomeIcon
                 icon={faTimesCircle}
                 className="dim-quarter"
-                title="Cancel jobs"
+                title="Cancel Task Runs"
               />
             </button>
             <button
               type="button"
-              className="btn btn-sm btn-push pin-all-jobs-btn"
-              title="Pin all available jobs in this push"
-              aria-label="Pin all available jobs in this push"
+              className="btn btn-sm btn-push pin-all-task-runs-btn"
+              title="Pin all available Task Runs in this push"
+              aria-label="Pin all available Task Runs in this push"
               onClick={this.pinAllShownJobs}
             >
-              <FontAwesomeIcon icon={faThumbtack} title="Pin all jobs" />
+              <FontAwesomeIcon icon={faThumbtack} title="Pin all Task Runs" />
             </button>
             {!!countSelectedRunnableJobs && runnableVisible && (
               <Button
-                className="btn btn-sm btn-push trigger-new-jobs-btn"
-                title="Trigger new jobs"
+                className="btn btn-sm btn-push trigger-new-task-runs-btn"
+                title="Trigger new Task Runs"
                 onClick={this.triggerNewJobs}
               >
                 Trigger

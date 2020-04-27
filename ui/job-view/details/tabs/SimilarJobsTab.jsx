@@ -45,7 +45,7 @@ class SimilarJobsTab extends React.Component {
     const { page, similarJobs, selectedSimilarJob } = this.state;
     const { repoName, selectedJobFull, notify } = this.props;
     const options = {
-      // get one extra to detect if there are more jobs that can be loaded (hasNextPage)
+      // get one extra to detect if there are more taskRuns that can be loaded (hasNextPage)
       count: this.pageSize + 1,
       offset: (page - 1) * this.pageSize,
     };
@@ -76,7 +76,7 @@ class SimilarJobsTab extends React.Component {
 
       if (!failureStatus) {
         pushList = data;
-        // decorate the list of jobs with their result sets
+        // decorate the list of taskRuns with their result sets
         const pushes = pushList.results.reduce(
           (acc, push) => ({ ...acc, [push.id]: push }),
           {},
@@ -98,19 +98,23 @@ class SimilarJobsTab extends React.Component {
           this.showJobInfo(newSimilarJobs[0]);
         }
       } else {
-        notify(`Error fetching similar jobs push data: ${data}`, 'danger', {
-          sticky: true,
-        });
+        notify(
+          `Error fetching similar Task Runs push data: ${data}`,
+          'danger',
+          {
+            sticky: true,
+          },
+        );
       }
     } else {
-      notify(`Error fetching similar jobs: ${failureStatus}`, 'danger', {
+      notify(`Error fetching similar Task Runs: ${failureStatus}`, 'danger', {
         sticky: true,
       });
     }
     this.setState({ isLoading: false });
   };
 
-  // this is triggered by the show previous jobs button
+  // this is triggered by the show previous taskRuns button
   showNext = () => {
     const { page } = this.state;
     this.setState({ page: page + 1, isLoading: true }, this.getSimilarJobs);
@@ -161,7 +165,7 @@ class SimilarJobsTab extends React.Component {
 
     return (
       <div
-        className="similar-jobs w-100"
+        className="similar-task-runs w-100"
         role="region"
         aria-label="Similar Jobs"
       >
@@ -187,7 +191,7 @@ class SimilarJobsTab extends React.Component {
                 >
                   <td>
                     <button
-                      className={`btn btn-similar-jobs btn-xs ${getBtnClass(
+                      className={`btn btn-similar-task-runs btn-xs ${getBtnClass(
                         similarJob.resultStatus,
                         similarJob.failure_classification_id,
                       )}`}
@@ -224,7 +228,7 @@ class SimilarJobsTab extends React.Component {
               type="button"
               onClick={this.showNext}
             >
-              Show previous jobs
+              Show previous Task Runs
             </Button>
           )}
         </div>

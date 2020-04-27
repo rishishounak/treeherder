@@ -44,13 +44,13 @@ class PushList extends React.Component {
   componentDidUpdate(prevProps) {
     const {
       notify,
-      jobMap,
-      jobsLoaded,
+      taskRunMap,
+      taskRunsLoaded,
       setSelectedJobFromQueryString,
     } = this.props;
 
-    if (jobsLoaded && jobsLoaded !== prevProps.jobsLoaded) {
-      setSelectedJobFromQueryString(notify, jobMap);
+    if (taskRunsLoaded && taskRunsLoaded !== prevProps.taskRunsLoaded) {
+      setSelectedJobFromQueryString(notify, taskRunMap);
     }
   }
 
@@ -125,7 +125,7 @@ class PushList extends React.Component {
       loadingPushes,
       fetchNextPushes,
       getAllShownJobs,
-      jobsLoaded,
+      taskRunsLoaded,
       duplicateJobsVisible,
       groupCountsExpanded,
       pushHealthVisibility,
@@ -143,7 +143,7 @@ class PushList extends React.Component {
         id="push-list"
         onClick={evt => this.clearIfEligibleTarget(evt.target)}
       >
-        {jobsLoaded && <span className="hidden ready" />}
+        {taskRunsLoaded && <span className="hidden ready" />}
         {repoName &&
           pushList.map(push => (
             <ErrorBoundary
@@ -211,7 +211,7 @@ PushList.propTypes = {
   pollPushes: PropTypes.func.isRequired,
   updateRange: PropTypes.func.isRequired,
   loadingPushes: PropTypes.bool.isRequired,
-  jobsLoaded: PropTypes.bool.isRequired,
+  taskRunsLoaded: PropTypes.bool.isRequired,
   duplicateJobsVisible: PropTypes.bool.isRequired,
   groupCountsExpanded: PropTypes.bool.isRequired,
   allUnclassifiedFailureCount: PropTypes.number.isRequired,
@@ -220,7 +220,7 @@ PushList.propTypes = {
   pinnedJobs: PropTypes.shape({}).isRequired,
   setSelectedJobFromQueryString: PropTypes.func.isRequired,
   getAllShownJobs: PropTypes.func.isRequired,
-  jobMap: PropTypes.shape({}).isRequired,
+  taskRunMap: PropTypes.shape({}).isRequired,
   notify: PropTypes.func.isRequired,
   revision: PropTypes.string,
   currentRepo: PropTypes.shape({}),
@@ -234,16 +234,16 @@ PushList.defaultProps = {
 const mapStateToProps = ({
   pushes: {
     loadingPushes,
-    jobsLoaded,
-    jobMap,
+    taskRunsLoaded,
+    taskRunMap,
     pushList,
     allUnclassifiedFailureCount,
   },
   pinnedJobs: { pinnedJobs },
 }) => ({
   loadingPushes,
-  jobsLoaded,
-  jobMap,
+  taskRunsLoaded,
+  taskRunMap,
   pushList,
   allUnclassifiedFailureCount,
   pinnedJobs,

@@ -59,7 +59,7 @@ export class JobGroupComponent extends React.Component {
     this.setState(prevState => ({ expanded: !prevState.expanded }));
   };
 
-  groupButtonsAndCounts(jobs, expanded) {
+  groupButtonsAndCounts(taskRuns, expanded) {
     const { duplicateJobsVisible, groupCountsExpanded } = this.props;
     let buttons = [];
     const counts = [];
@@ -67,11 +67,11 @@ export class JobGroupComponent extends React.Component {
 
     if (expanded || groupCountsExpanded) {
       // All buttons should be shown when the group is expanded
-      buttons = jobs;
+      buttons = taskRuns;
     } else {
       const stateCounts = {};
-      const typeSymbolCounts = countBy(jobs, 'job_type_symbol');
-      jobs.forEach(job => {
+      const typeSymbolCounts = countBy(taskRuns, 'job_type_symbol');
+      taskRuns.forEach(job => {
         const { resultStatus, visible } = job;
         const btnClass = getBtnClass(resultStatus);
         if (!visible) return;
@@ -122,7 +122,7 @@ export class JobGroupComponent extends React.Component {
         name: groupName,
         symbol: groupSymbol,
         tier: groupTier,
-        jobs: groupJobs,
+        taskRuns: groupJobs,
         mapKey: groupMapKey,
       },
     } = this.props;
@@ -158,7 +158,7 @@ export class JobGroupComponent extends React.Component {
                   count={countInfo.count}
                   onClick={this.toggleExpanded}
                   className={`${countInfo.btnClass}-count${countInfo.selectedClasses}`}
-                  title={`${countInfo.count} ${countInfo.countText} jobs in group`}
+                  title={`${countInfo.count} ${countInfo.countText} Task Runs in group`}
                   key={countInfo.lastJob.id}
                 />
               ))}

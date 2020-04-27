@@ -24,10 +24,10 @@ export const setSelectedTaskRun = (job, updateDetails = true) => ({
   updateDetails,
 });
 
-export const setSelectedTaskRunFromQueryString = (notify, jobMap) => ({
+export const setSelectedTaskRunFromQueryString = (notify, taskRunMap) => ({
   type: SELECT_TASK_RUN_FROM_QUERY_STRING,
   notify,
-  jobMap,
+  taskRunMap,
 });
 
 export const clearSelectedTaskRun = countPinnedJobs => ({
@@ -130,14 +130,14 @@ const searchDatabaseForTaskRun = async (jobParams, notify) => {
  * If that job isn't in any of the loaded pushes, then throw
  * an error and provide a link to load it with the right push.
  */
-const doSetSelectedJobFromQueryString = (notify, jobMap) => {
+const doSetSelectedJobFromQueryString = (notify, taskRunMap) => {
   const selectedJobId = parseInt(getUrlParam('selectedJob') || '0', 10);
   const { taskId, runId } = getTaskRun(getUrlParam('selectedTaskRun'));
 
   // Try to find the Task by taskId and runID
   if (taskId) {
     const retryId = parseInt(runId, 10);
-    const task = Object.values(jobMap).find(
+    const task = Object.values(taskRunMap).find(
       job => job.task_id === taskId && job.retry_id === retryId,
     );
 
@@ -149,7 +149,7 @@ const doSetSelectedJobFromQueryString = (notify, jobMap) => {
 
   // Try to find the Task by selectedJobId
   if (selectedJobId) {
-    const task = jobMap[selectedJobId];
+    const task = taskRunMap[selectedJobId];
 
     // select the job in question
     if (task) {
@@ -184,18 +184,18 @@ export const changeJob = (
     ? thJobNavSelectors.UNCLASSIFIED_FAILURES
     : thJobNavSelectors.ALL_JOBS;
   const noMoreText = `No ${
-    unclassifiedOnly ? 'unclassified failures' : 'jobs'
+    unclassifiedOnly ? 'unclassified failures' : 'Task Runs'
   } to select`;
   // Get the appropriate next index based on the direction and current job
   // selection (if any).  Must wrap end to end.
   const getIndex =
     direction === 'next'
-      ? (idx, jobs) => (idx + 1 > jobs.length - 1 ? 0 : idx + 1)
-      : (idx, jobs) => (idx - 1 < 0 ? jobs.length - 1 : idx - 1);
+      ? (idx, taskRuns) => (idx + 1 > taskRuns.length - 1 ? 0 : idx + 1)
+      : (idx, taskRuns) => (idx - 1 < 0 ? taskRuns.length - 1 : idx - 1);
 
-  // Filter the list of possible jobs down to ONLY ones in the .th-view-content
+  // Filter the list of possible taskRuns down to ONLY ones in the .th-view-content
   // div (excluding pinBoard) and then to the specific selector passed
-  // in.  And then to only VISIBLE (not filtered away) jobs.  The exception
+  // in.  And then to only VISIBLE (not filtered away) taskRuns.  The exception
   // is for the .selected-job.  Even if the ``visible`` field is set to false,
   // this includes it because it is the anchor from which we find
   // the next/previous job.
@@ -207,15 +207,15 @@ export const changeJob = (
   // selected.  This is very important to the sheriff workflow.  As soon as
   // selection changes away from it, the job will no longer be visible.
   const content = document.querySelector('#push-list');
-  const jobs = Array.prototype.slice.call(
+  const taskRuns = Array.prototype.slice.call(
     content.querySelectorAll(jobNavSelector.selector),
   );
 
-  if (jobs.length) {
+  if (taskRuns.length) {
     const selectedEl = content.querySelector('.selected-job, .selected-count');
-    const selIdx = jobs.indexOf(selectedEl);
-    const idx = getIndex(selIdx, jobs);
-    const jobEl = jobs[idx];
+    const selIdx = taskRuns.indexOf(selectedEl);
+    const idx = getIndex(selIdx, taskRuns);
+    const jobEl = taskRuns[idx];
 
     if (selIdx !== idx) {
       const jobId = jobEl.getAttribute('data-job-id');
@@ -223,7 +223,7 @@ export const changeJob = (
 
       if (jobInstance) {
         // Delay updating details for the new job right away,
-        // in case the user is switching rapidly between jobs
+        // in case the user is switching rapidly between taskRuns
         return doSelectJob(jobInstance.props.job, false);
       }
     }
@@ -239,13 +239,13 @@ export const initialState = {
 };
 
 export const reducer = (state = initialState, action) => {
-  const { job, jobMap, countPinnedJobs, updateDetails, notify } = action;
+  const { job, taskRunMap, countPinnedJobs, updateDetails, notify } = action;
 
   switch (action.type) {
     case SELECT_TASK_RUN:
       return doSelectJob(job, updateDetails);
     case SELECT_TASK_RUN_FROM_QUERY_STRING:
-      return doSetSelectedJobFromQueryString(notify, jobMap);
+      return doSetSelectedJobFromQueryString(notify, taskRunMap);
     case UPDATE_TASK_RUN_DETAILS:
       return doUpdateJobDetails(job);
     case CLEAR_TASK_RUN:

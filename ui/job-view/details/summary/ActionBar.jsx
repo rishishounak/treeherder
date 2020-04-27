@@ -141,7 +141,7 @@ class ActionBar extends React.PureComponent {
     );
   };
 
-  retriggerJob = async jobs => {
+  retriggerJob = async taskRuns => {
     const { notify, decisionTaskMap, currentRepo } = this.props;
 
     // Spin the retrigger button when retriggers happen
@@ -156,7 +156,7 @@ class ActionBar extends React.PureComponent {
       });
     });
 
-    JobModel.retrigger(jobs, currentRepo, notify, 1, decisionTaskMap);
+    JobModel.retrigger(taskRuns, currentRepo, notify, 1, decisionTaskMap);
   };
 
   backfillJob = async () => {
@@ -257,7 +257,7 @@ class ActionBar extends React.PureComponent {
           let response = null;
           do {
             response = window.prompt(
-              'Enter number of times (1..100) to run isolation jobs: ',
+              'Enter number of times (1..100) to run isolation Task Runs: ',
               times,
             );
             if (response == null) {
@@ -315,7 +315,7 @@ class ActionBar extends React.PureComponent {
 
     if (title === '') {
       title =
-        'Trigger jobs of this type on prior pushes ' +
+        'Trigger Task Runs of this type on prior pushes ' +
         'to fill in gaps where the job was not run';
     } else {
       // Cut off trailing '/ ' if one exists, capitalize first letter
@@ -367,11 +367,13 @@ class ActionBar extends React.PureComponent {
     }
   };
 
-  cancelJobs = jobs => {
+  cancelJobs = taskRuns => {
     const { notify, decisionTaskMap, currentRepo } = this.props;
 
     JobModel.cancel(
-      jobs.filter(({ state }) => state === 'pending' || state === 'running'),
+      taskRuns.filter(
+        ({ state }) => state === 'pending' || state === 'running',
+      ),
       currentRepo,
       notify,
       decisionTaskMap,

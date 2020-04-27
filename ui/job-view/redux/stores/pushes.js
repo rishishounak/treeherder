@@ -43,10 +43,13 @@ const getRevisionTips = pushList => {
   };
 };
 
-const getLastModifiedJobTime = jobMap => {
+const getLastModifiedJobTime = taskRunMap => {
   const latest =
-    max(Object.values(jobMap).map(job => new Date(`${job.last_modified}Z`))) ||
-    new Date();
+    max(
+      Object.values(taskRunMap).map(
+        taskRun => new Date(`${taskRun.last_modified}Z`),
+      ),
+    ) || new Date();
 
   latest.setSeconds(latest.getSeconds() - 3);
   return latest;
@@ -54,19 +57,22 @@ const getLastModifiedJobTime = jobMap => {
 
 /**
  * Loops through the map of unclassified failures and checks if it is
- * within the enabled tiers and if the job should be shown. This essentially
- * gives us the difference in unclassified failures and, of those jobs, the
+ * within the enabled tiers and if the taskRun should be shown. This essentially
+ * gives us the difference in unclassified failures and, of those taskRuns, the
  * ones that have been filtered out
  */
-const doRecalculateUnclassifiedCounts = jobMap => {
+const doRecalculateUnclassifiedCounts = taskRunMap => {
   const filterModel = new FilterModel();
   const tiers = filterModel.urlParams.tier;
   let allUnclassifiedFailureCount = 0;
   let filteredUnclassifiedFailureCount = 0;
 
-  Object.values(jobMap).forEach(job => {
-    if (isUnclassifiedFailure(job) && tiers.includes(String(job.tier))) {
-      if (filterModel.showJob(job)) {
+  Object.values(taskRunMap).forEach(taskRun => {
+    if (
+      isUnclassifiedFailure(taskRun) &&
+      tiers.includes(String(taskRun.tier))
+    ) {
+      if (filterModel.showJob(taskRun)) {
         filteredUnclassifiedFailureCount++;
       }
       allUnclassifiedFailureCount++;
@@ -78,7 +84,7 @@ const doRecalculateUnclassifiedCounts = jobMap => {
   };
 };
 
-const addPushes = (data, pushList, jobMap, setFromchange) => {
+const addPushes = (data, pushList, taskRunMap, setFromchange) => {
   if (data.results.length > 0) {
     const pushIds = pushList.map(push => push.id);
     const newPushList = [
@@ -93,7 +99,7 @@ const addPushes = (data, pushList, jobMap, setFromchange) => {
     const newStuff = {
       pushList: newPushList,
       oldestPushTimestamp,
-      ...doRecalculateUnclassifiedCounts(jobMap),
+      ...doRecalculateUnclassifiedCounts(taskRunMap),
       ...getRevisionTips(newPushList),
     };
 
@@ -114,19 +120,19 @@ const addPushes = (data, pushList, jobMap, setFromchange) => {
   return {};
 };
 
-const fetchNewJobs = () => {
+const fetchNewTaskRuns = () => {
   return async (dispatch, getState) => {
     const {
-      pushes: { pushList, jobMap },
+      pushes: { pushList, taskRunMap },
     } = getState();
 
     if (!pushList.length) {
-      // If we have no pushes, then no need to get jobs.
+      // If we have no pushes, then no need to get taskRuns.
       return;
     }
 
     const pushIds = pushList.map(push => push.id);
-    const lastModified = getLastModifiedJobTime(jobMap);
+    const lastModified = getLastModifiedJobTime(taskRunMap);
 
     const resp = await JobModel.getList(
       {
@@ -138,22 +144,24 @@ const fetchNewJobs = () => {
     const errors = processErrors([resp]);
 
     if (!errors.length) {
-      // break the jobs up per push
+      // break the taskRuns up per push
       const { data } = resp;
-      const jobs = data.reduce((acc, job) => {
-        const pushJobs = acc[job.push_id] ? [...acc[job.push_id], job] : [job];
-        return { ...acc, [job.push_id]: pushJobs };
+      const taskRuns = data.reduce((acc, taskRun) => {
+        const pushJobs = acc[taskRun.push_id]
+          ? [...acc[taskRun.push_id], taskRun]
+          : [taskRun];
+        return { ...acc, [taskRun.push_id]: pushJobs };
       }, {});
-      // If a job is selected, and one of the jobs we just fetched is the
-      // updated version of that selected job, then send that with the event.
+      // If a taskRun is selected, and one of the taskRuns we just fetched is the
+      // updated version of that selected taskRun, then send that with the event.
       const selectedTaskRun = getUrlParam('selectedTaskRun');
       const updatedSelectedJob = selectedTaskRun
-        ? data.find(job => getTaskRunStr(job) === selectedTaskRun)
+        ? data.find(taskRun => getTaskRunStr(taskRun) === selectedTaskRun)
         : null;
 
       window.dispatchEvent(
         new CustomEvent(thEvents.applyNewJobs, {
-          detail: { jobs },
+          detail: { taskRuns },
         }),
       );
       if (updatedSelectedJob) {
@@ -167,30 +175,30 @@ const fetchNewJobs = () => {
   };
 };
 
-const doUpdateJobMap = (jobList, jobMap, decisionTaskMap, pushList) => {
-  if (jobList.length) {
+const doUpdateJobMap = (taskRunList, taskRunMap, decisionTaskMap, pushList) => {
+  if (taskRunList.length) {
     // lodash ``keyBy`` is significantly faster than doing a ``reduce``
     return {
-      jobMap: { ...jobMap, ...keyBy(jobList, 'id') },
+      taskRunMap: { ...taskRunMap, ...keyBy(taskRunList, 'id') },
       decisionTaskMap: {
         ...decisionTaskMap,
         ...keyBy(
-          jobList
+          taskRunList
             .filter(
-              job =>
-                job.job_type_name.includes('Decision Task') &&
-                job.result === 'success' &&
-                job.job_type_symbol === 'D',
+              taskRun =>
+                taskRun.job_type_name.includes('Decision Task') &&
+                taskRun.result === 'success' &&
+                taskRun.job_type_symbol === 'D',
             )
-            .map(job => ({
-              push_id: job.push_id,
-              id: job.task_id,
-              run: job.retry_id,
+            .map(taskRun => ({
+              push_id: taskRun.push_id,
+              id: taskRun.task_id,
+              run: taskRun.retry_id,
             })),
           'push_id',
         ),
       },
-      jobsLoaded: pushList.every(push => push.jobsLoaded),
+      taskRunsLoaded: pushList.every(push => push.taskRunsLoaded),
     };
   }
   return {};
@@ -202,7 +210,7 @@ export const fetchPushes = (
 ) => {
   return async (dispatch, getState) => {
     const {
-      pushes: { pushList, jobMap, oldestPushTimestamp },
+      pushes: { pushList, taskRunMap, oldestPushTimestamp },
     } = getState();
 
     dispatch({ type: LOADING });
@@ -232,7 +240,7 @@ export const fetchPushes = (
         pushResults: addPushes(
           data.results.length ? data : { results: [] },
           pushList,
-          jobMap,
+          taskRunMap,
           setFromchange,
         ),
       });
@@ -245,7 +253,7 @@ export const fetchPushes = (
 export const pollPushes = () => {
   return async (dispatch, getState) => {
     const {
-      pushes: { pushList, jobMap },
+      pushes: { pushList, taskRunMap },
     } = getState();
     // these params will be passed in each time we poll to remain
     // within the constraints of the URL params
@@ -258,8 +266,8 @@ export const pollPushes = () => {
 
     if (pushList.length === 1 && locationSearch.revision) {
       // If we are on a single revision, no need to poll for more pushes, but
-      // we need to keep polling for jobs.
-      dispatch(fetchNewJobs());
+      // we need to keep polling for taskRuns.
+      dispatch(fetchNewTaskRuns());
     } else {
       if (pushList.length) {
         // We have a range of pushes, but not bound to a single push,
@@ -278,11 +286,11 @@ export const pollPushes = () => {
           pushResults: addPushes(
             data.results.length ? data : { results: [] },
             pushList,
-            jobMap,
+            taskRunMap,
             false,
           ),
         });
-        dispatch(fetchNewJobs());
+        dispatch(fetchNewTaskRuns());
       } else {
         dispatch(
           notify('Error fetching new push data', 'danger', { sticky: true }),
@@ -318,13 +326,13 @@ export const fetchNextPushes = count => {
 
 export const clearPushes = () => ({ type: CLEAR_PUSHES });
 
-export const setPushes = (pushList, jobMap) => ({
+export const setPushes = (pushList, taskRunMap) => ({
   type: SET_PUSHES,
   pushResults: {
     pushList,
-    jobMap,
+    taskRunMap,
     ...getRevisionTips(pushList),
-    ...doRecalculateUnclassifiedCounts(jobMap),
+    ...doRecalculateUnclassifiedCounts(taskRunMap),
     oldestPushTimestamp: pushList[pushList.length - 1].push_timestamp,
   },
 });
@@ -334,15 +342,15 @@ export const recalculateUnclassifiedCounts = filterModel => ({
   filterModel,
 });
 
-export const updateJobMap = jobList => ({
+export const updateJobMap = taskRunList => ({
   type: UPDATE_TASK_RUN_MAP,
-  jobList,
+  taskRunList,
 });
 
 export const updateRange = range => {
   return (dispatch, getState) => {
     const {
-      pushes: { pushList, jobMap },
+      pushes: { pushList, taskRunMap },
     } = getState();
     const { revision } = range;
     // change the range of pushes.  might already have them.
@@ -353,9 +361,9 @@ export const updateRange = range => {
     window.dispatchEvent(new CustomEvent(thEvents.clearPinboard));
     if (revisionPushList.length) {
       const { id: pushId } = revisionPushList[0];
-      const revisionJobMap = Object.entries(jobMap).reduce(
-        (acc, [id, job]) =>
-          job.push_id === pushId ? { ...acc, [id]: job } : acc,
+      const revisionJobMap = Object.entries(taskRunMap).reduce(
+        (acc, [id, taskRun]) =>
+          taskRun.push_id === pushId ? { ...acc, [id]: taskRun } : acc,
         {},
       );
       dispatch(clearSelectedTaskRun(0));
@@ -373,10 +381,10 @@ export const updateRange = range => {
 
 export const initialState = {
   pushList: [],
-  jobMap: {},
+  taskRunMap: {},
   decisionTaskMap: {},
   revisionTips: [],
-  jobsLoaded: false,
+  taskRunsLoaded: false,
   loadingPushes: true,
   oldestPushTimestamp: null,
   allUnclassifiedFailureCount: 0,
@@ -384,8 +392,8 @@ export const initialState = {
 };
 
 export const reducer = (state = initialState, action) => {
-  const { jobList, pushResults, setFromchange } = action;
-  const { pushList, jobMap, decisionTaskMap } = state;
+  const { taskRunList, pushResults, setFromchange } = action;
+  const { pushList, taskRunMap, decisionTaskMap } = state;
   switch (action.type) {
     case LOADING:
       return { ...state, loadingPushes: true };
@@ -396,11 +404,11 @@ export const reducer = (state = initialState, action) => {
     case SET_PUSHES:
       return { ...state, loadingPushes: false, ...pushResults };
     case RECALCULATE_UNCLASSIFIED_COUNTS:
-      return { ...state, ...doRecalculateUnclassifiedCounts(jobMap) };
+      return { ...state, ...doRecalculateUnclassifiedCounts(taskRunMap) };
     case UPDATE_TASK_RUN_MAP:
       return {
         ...state,
-        ...doUpdateJobMap(jobList, jobMap, decisionTaskMap, pushList),
+        ...doUpdateJobMap(taskRunList, taskRunMap, decisionTaskMap, pushList),
       };
     default:
       return state;

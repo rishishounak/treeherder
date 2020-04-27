@@ -29,7 +29,7 @@ function BugListItem(props) {
         size="xs"
         type="button"
         onClick={() => addBug(bug, selectedJobFull)}
-        title="add to list of bugs to associate with all pinned jobs"
+        title="add to list of bugs to associate with all pinned Task Runs"
       >
         <FontAwesomeIcon icon={faThumbtack} title="Select bug" />
       </Button>

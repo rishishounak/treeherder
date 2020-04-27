@@ -35,12 +35,12 @@ class FuzzyJobFinder extends React.Component {
   }
 
   /*
-   *  Filter the list of runnable jobs based on the value of this input.
+   *  Filter the list of runnable taskRuns based on the value of this input.
    *  Only actually do the filtering when `enter` is pressed, as filtering 13K DOM elements is slow...
-   *  If this input is empty when `enter` is pressed, reset back to the full list of runnable jobs.
+   *  If this input is empty when `enter` is pressed, reset back to the full list of runnable taskRuns.
    */
   filterJobs = ev => {
-    // By default we show a trimmed down list of runnable jobs, but there's an option to show the full list
+    // By default we show a trimmed down list of runnable taskRuns, but there's an option to show the full list
     let currentList;
     if (this.state.useFullList) {
       currentList = this.props.jobList;
@@ -59,7 +59,7 @@ class FuzzyJobFinder extends React.Component {
             tokenize: true,
           };
 
-          // Always search from the full (or full filtered) list of jobs
+          // Always search from the full (or full filtered) list of taskRuns
           const fuse = new Fuse(currentList, options);
 
           this.setState(prevState => ({
@@ -91,7 +91,7 @@ class FuzzyJobFinder extends React.Component {
     );
     let { selectedList } = this.state;
 
-    // When adding jobs, add only new, unique job names to avoid duplicates
+    // When adding taskRuns, add only new, unique job names to avoid duplicates
     selectedList = [...new Set([].concat(selectedList, selectedOptions))];
     this.setState({ selectedList });
   };
@@ -107,7 +107,7 @@ class FuzzyJobFinder extends React.Component {
     const { selectedList } = this.state;
     const { addJobsSelected } = this.state;
 
-    // When adding jobs, add only new, unique job names to avoid duplicates
+    // When adding taskRuns, add only new, unique job names to avoid duplicates
     const newSelectedList = [
       ...new Set([].concat(selectedList, addJobsSelected)),
     ];
@@ -133,7 +133,7 @@ class FuzzyJobFinder extends React.Component {
   submitJobs = () => {
     const { notify } = this.props;
     if (this.state.selectedList.length > 0) {
-      notify('Submitting selected jobs...');
+      notify('Submitting selected Task Runs...');
       this.setState({
         submitDisabled: true,
       });
@@ -214,16 +214,16 @@ class FuzzyJobFinder extends React.Component {
                 <Input
                   type="search"
                   onKeyDown={this.filterJobs}
-                  placeholder="Filter runnable jobs: 'Android', 'Mochitest', 'Build', etc..."
+                  placeholder="Filter runnable Task Runs: 'Android', 'Mochitest', 'Build', etc..."
                   className="my-2"
-                  title="Filter the list of runnable jobs"
+                  title="Filter the list of runnable Task Runs"
                 />
               </Col>
               <Col sm={2}>
                 <Label
                   className="my-3"
                   onChange={evt => this.toggleFullList(evt)}
-                  title="The full list includes thousands of jobs that don't typically get run, and is much slower to render"
+                  title="The full list includes thousands of Task Runs that don't typically get run, and is much slower to render"
                 >
                   <Input type="checkbox" /> Use full job list
                 </Label>

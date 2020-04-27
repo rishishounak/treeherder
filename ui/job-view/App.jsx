@@ -201,9 +201,9 @@ class App extends React.Component {
 
   getAllShownJobs = pushId => {
     const {
-      pushes: { jobMap },
+      pushes: { taskRunMap },
     } = store.getState();
-    const jobList = Object.values(jobMap);
+    const jobList = Object.values(taskRunMap);
 
     return pushId
       ? jobList.filter(job => job.push_id === pushId && job.visible)
