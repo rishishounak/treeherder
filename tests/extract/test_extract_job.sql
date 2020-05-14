@@ -144,8 +144,6 @@ FROM
                 JOIN
             `test_treeherder`.`failure_line` AS `t3` ON `t3`.`job_log_id` = `t2`.`id`
                 LEFT JOIN
-            `test_treeherder`.`classified_failure` AS `t4` ON `t4`.`id` = `t3`.`best_classification_id`
-                LEFT JOIN
             `test_treeherder`.`repository` AS `t5` ON `t5`.`id` = `t3`.`repository_id`
         UNION ALL
 

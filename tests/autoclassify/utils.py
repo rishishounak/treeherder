@@ -4,10 +4,8 @@ from mozlog.formatters.tbplformatter import TbplFormatter
 
 from treeherder.model.models import (
     FailureLine,
-    Job,
     JobLog,
     TextLogError,
-    TextLogErrorMetadata,
     TextLogStep,
 )
 
@@ -27,12 +25,6 @@ group_line = {"action": "test_groups"}
 def create_lines(test_job, lines):
     error_lines = create_text_log_errors(test_job, lines)
     failure_lines = create_failure_lines(test_job, lines)
-
-    for error_line, failure_line in zip(error_lines, failure_lines):
-        TextLogErrorMetadata.objects.create(text_log_error=error_line, failure_line=failure_line)
-
-    test_job.autoclassify_status = Job.CROSSREFERENCED
-    test_job.save()
 
     return error_lines, failure_lines
 

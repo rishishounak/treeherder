@@ -4,12 +4,10 @@ from tests.autoclassify.utils import create_failure_lines, create_text_log_error
 from treeherder.model.models import (
     BugJobMap,
     Bugscache,
-    ClassifiedFailure,
     FailureLine,
     Job,
     JobNote,
     TextLogError,
-    TextLogErrorMetadata,
 )
 
 
@@ -204,13 +202,8 @@ def test_update_errors(
     client.force_authenticate(user=test_user)
 
     lines = [(test_line, {}), (test_line, {"subtest": "subtest2"})]
-    new_failure_lines = create_failure_lines(jobs[1], lines)
-    new_text_log_errors = create_text_log_errors(jobs[1], lines)
-
-    for text_log_error, failure_line in zip(new_text_log_errors, new_failure_lines):
-        TextLogErrorMetadata.objects.create(
-            text_log_error=text_log_error, failure_line=failure_line
-        )
+    create_failure_lines(jobs[1], lines)
+    create_text_log_errors(jobs[1], lines)
 
     failure_lines = FailureLine.objects.filter(job_guid__in=[job.guid for job in jobs]).all()
     text_log_errors = TextLogError.objects.filter(step__job__in=jobs).all()
@@ -423,7 +416,6 @@ def test_update_error_change_bug(
 
     assert resp.status_code == 200
 
-    classified_failure = ClassifiedFailure.objects.get(id=classified_failure.id)
     error_line = TextLogError.objects.get(id=error_line.id)
 
     assert error_line.metadata.best_classification == classified_failure
@@ -457,4 +449,3 @@ def test_update_error_bug_change_cf(
     assert error_line.metadata.best_classification == classified_failures[1]
     assert error_line.metadata.best_is_verified
     assert error_line.metadata.best_classification.bug_number == 78910
-    assert ClassifiedFailure.objects.count() == len(classified_failures) - 1

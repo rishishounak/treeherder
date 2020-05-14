@@ -11,7 +11,6 @@ from _pytest.monkeypatch import MonkeyPatch
 from django.conf import settings
 from rest_framework.test import APIClient
 
-from treeherder.autoclassify.autoclassify import mark_best_classification
 from treeherder.etl.jobs import store_job_data
 from treeherder.etl.push import store_push_data
 from treeherder.model.models import (
@@ -20,7 +19,6 @@ from treeherder.model.models import (
     Option,
     OptionCollection,
     Push,
-    TextLogErrorMetadata,
     User,
 )
 from treeherder.perf.models import (
@@ -349,37 +347,12 @@ def text_log_errors_failure_lines(test_job, failure_lines):
 
     text_log_errors = create_text_log_errors(test_job, lines)
 
-    for error_line, failure_line in zip(text_log_errors, failure_lines):
-        TextLogErrorMetadata.objects.create(text_log_error=error_line, failure_line=failure_line)
-
     return text_log_errors, failure_lines
 
 
 @pytest.fixture
 def test_matcher(request):
     return "TreeherderUnitTestDetector"
-
-
-@pytest.fixture
-def classified_failures(
-    test_job, text_log_errors_failure_lines, test_matcher, failure_classifications
-):
-    from treeherder.model.models import ClassifiedFailure
-
-    _, failure_lines = text_log_errors_failure_lines
-
-    classified_failures = []
-
-    for failure_line in failure_lines:
-        if failure_line.job_guid == test_job.guid:
-            classified_failure = ClassifiedFailure.objects.create()
-
-            failure_line.error.create_match(test_matcher, classified_failure)
-            mark_best_classification(failure_line.error, classified_failure)
-
-            classified_failures.append(classified_failure)
-
-    return classified_failures
 
 
 @pytest.fixture

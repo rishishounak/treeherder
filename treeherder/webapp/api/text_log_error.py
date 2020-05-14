@@ -5,7 +5,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from treeherder.model.models import ClassifiedFailure, TextLogError
+from treeherder.model.models import TextLogError
 from treeherder.webapp.api import pagination, serializers
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ class TextLogErrorViewSet(viewsets.ModelViewSet):
         ids = []
         error_line_ids = set()
         classification_ids = set()
-        bug_number_classifications = {}
 
         for item in data:
             line_id = item.get("id")
@@ -43,15 +42,6 @@ class TextLogErrorViewSet(viewsets.ModelViewSet):
 
             bug_number = item.get("bug_number")
 
-            if (
-                not classification_id
-                and bug_number is not None
-                and bug_number not in bug_number_classifications
-            ):
-                bug_number_classifications[bug_number], _ = ClassifiedFailure.objects.get_or_create(
-                    bug_number=bug_number
-                )
-
             ids.append((line_id, classification_id, bug_number))
 
         error_lines = TextLogError.objects.prefetch_related('classified_failures').filter(
@@ -62,12 +52,6 @@ class TextLogErrorViewSet(viewsets.ModelViewSet):
             missing = error_line_ids - set(error_lines.keys())
             return ("No text log error with id: {0}".format(", ".join(missing)), HTTP_404_NOT_FOUND)
 
-        classifications = ClassifiedFailure.objects.filter(id__in=classification_ids)
-        classifications = {c.id: c for c in classifications}
-        if len(classifications) != len(classification_ids):
-            missing = classification_ids - set(classifications.keys())
-            return ("No classification with id: {0}".format(", ".join(missing)), HTTP_404_NOT_FOUND)
-
         jobs = set()
         for line_id, classification_id, bug_number in ids:
             logger.debug(
@@ -77,21 +61,8 @@ class TextLogErrorViewSet(viewsets.ModelViewSet):
                 bug_number,
             )
             error_line = error_lines[line_id]
-            if classification_id is not None:
-                logger.debug("Using classification id")
-                classification = classifications[classification_id]
-                if bug_number is not None and bug_number != classification.bug_number:
-                    logger.debug("Updating classification bug number")
-                    classification = classification.set_bug(bug_number)
-            elif bug_number is not None:
-                logger.debug("Using bug number")
-                classification = bug_number_classifications[bug_number]
-            else:
-                logger.debug("Using null classification")
-                classification = None
 
             jobs.add(error_line.step.job)
-            error_line.verify_classification(classification)
 
         for job in jobs:
             job.update_after_verification(user)

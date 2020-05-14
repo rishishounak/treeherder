@@ -9,7 +9,6 @@ from mo_math.randoms import Random
 from mo_times import Date
 from treeherder.extract import extract_jobs, extract_alerts
 from treeherder.model.models import (
-    ClassifiedFailure,
     Commit,
     FailureClassification,
     FailureLine,
@@ -151,16 +150,10 @@ def complex_job(
         }
     )
 
-    bcf = ClassifiedFailure.objects.create(**{"bug_number": 1234567,})
-    bcf.created = Date("2020-01-17 12:00:00").datetime
-    bcf.save()
-
     FailureLine.objects.create(
         job_log=job_logs1,
         **{
             "action": "test_groups",
-            "best_classification": bcf,
-            "best_is_verified": True,
             "repository": repo,
             "job_guid": job.guid,
             "line": 15,
@@ -173,8 +166,6 @@ def complex_job(
         job_log=job_logs1,
         **{
             "action": "crash",
-            "best_classification": bcf,
-            "best_is_verified": False,
             "repository": repo,
             "job_guid": job.guid,
             "line": 24031,

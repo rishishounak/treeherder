@@ -127,20 +127,6 @@ class BugscacheSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ClassifiedFailureSerializer(serializers.ModelSerializer):
-    bug = BugscacheSerializer(read_only=True)
-
-    class Meta:
-        model = models.ClassifiedFailure
-        exclude = ['created', 'modified', 'text_log_errors']
-
-
-class TextLogErrorMatchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.TextLogErrorMatch
-        exclude = ['text_log_error']
-
-
 class FailureLineNoStackSerializer(serializers.ModelSerializer):
     unstructured_bugs = NoOpSerializer(read_only=True)
 
@@ -148,41 +134,9 @@ class FailureLineNoStackSerializer(serializers.ModelSerializer):
         model = models.FailureLine
         exclude = ['stack', 'stackwalk_stdout', 'stackwalk_stderr']
 
-    def to_representation(self, failure_line):
-        """
-        Manually add matches our wrapper of the TLEMetadata -> TLE relation.
-
-        I could not work out how to do this multiple relation jump with DRF (or
-        even if it was possible) so using this manual method instead.
-        """
-        try:
-            matches = failure_line.error.matches.all()
-        except AttributeError:  # failure_line.error can return None
-            matches = []
-        tle_serializer = TextLogErrorMatchSerializer(matches, many=True)
-
-        classified_failures = models.ClassifiedFailure.objects.filter(error_matches__in=matches)
-        cf_serializer = ClassifiedFailureSerializer(classified_failures, many=True)
-
-        response = super().to_representation(failure_line)
-        response['matches'] = tle_serializer.data
-        response['classified_failures'] = cf_serializer.data
-        return response
-
-
-class TextLogErrorMetadataSerializer(serializers.ModelSerializer):
-    failure_line = FailureLineNoStackSerializer(read_only=True)
-
-    class Meta:
-        model = models.TextLogErrorMetadata
-        fields = '__all__'
-
 
 class TextLogErrorSerializer(serializers.ModelSerializer):
-    matches = TextLogErrorMatchSerializer(many=True)
-    classified_failures = ClassifiedFailureSerializer(many=True)
     bug_suggestions = NoOpSerializer(read_only=True)
-    metadata = TextLogErrorMetadataSerializer(read_only=True)
 
     class Meta:
         model = models.TextLogError

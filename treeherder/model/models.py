@@ -8,9 +8,8 @@ from hashlib import sha1
 import newrelic.agent
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MinLengthValidator
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Count, Max, Min, Q, Subquery
 from django.db.utils import ProgrammingError
 from django.forms import model_to_dict
@@ -859,103 +858,17 @@ class JobNote(models.Model):
             ).id
         self.job.save()
 
-    def _ensure_classification(self):
-        """
-        Ensures a single TextLogError's related bugs have Classifications.
-
-        If the linked Job has a single meaningful TextLogError:
-         - find the bugs currently related to it via a Classification
-         - find the bugs mapped to the job related to this note
-         - find the bugs that are mapped but not classified
-         - link this subset of bugs to Classifications
-         - if there's only one new bug and no existing ones, verify it
-        """
-        # if this note was automatically filed, don't update the auto-classification information
-        if not self.user:
-            return
-
-        # if the failure type isn't intermittent, ignore
-        if self.failure_classification.name not in ["intermittent", "intermittent needs filing"]:
-            return
-
-        # if the linked Job has more than one TextLogError, ignore
-        text_log_error = self.job.get_manual_classification_line()
-        if not text_log_error:
-            return
-
-        # evaluate the QuerySet here so it can be used when creating new_bugs below
-        existing_bugs = list(
-            ClassifiedFailure.objects.filter(
-                error_matches__text_log_error=text_log_error
-            ).values_list('bug_number', flat=True)
-        )
-
-        new_bugs = self.job.bugjobmap_set.exclude(bug_id__in=existing_bugs).values_list(
-            'bug_id', flat=True
-        )
-
-        if not new_bugs:
-            return
-
-        # Create Match instances for each new bug
-        for bug_number in new_bugs:
-            classification, _ = ClassifiedFailure.objects.get_or_create(bug_number=bug_number)
-            text_log_error.create_match("ManualDetector", classification)
-
-        # if there's only one new bug and no existing ones, verify it
-        if len(new_bugs) == 1 and not existing_bugs:
-            text_log_error.verify_classification(classification)
-
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self._update_failure_type()
-        self._ensure_classification()
 
     def delete(self, *args, **kwargs):
         super().delete(*args, **kwargs)
         self._update_failure_type()
-        self._ensure_classification()
 
     def __str__(self):
         return "{0} {1} {2} {3}".format(
             self.id, self.job.guid, self.failure_classification, self.who
-        )
-
-    @classmethod
-    def create_autoclassify_job_note(self, job, user=None):
-        """
-        Create a JobNote, possibly via auto-classification.
-
-        Create mappings from the given Job to Bugs via verified Classifications
-        of this Job.
-
-        Also creates a JobNote.
-        """
-        # Only insert bugs for verified failures since these are automatically
-        # mirrored to ES and the mirroring can't be undone
-        # TODO: Decide whether this should change now that we're no longer mirroring.
-        bug_numbers = set(
-            ClassifiedFailure.objects.filter(
-                best_for_errors__text_log_error__step__job=job,
-                best_for_errors__best_is_verified=True,
-            )
-            .exclude(bug_number=None)
-            .exclude(bug_number=0)
-            .values_list('bug_number', flat=True)
-        )
-
-        existing_maps = set(BugJobMap.objects.filter(bug_id__in=bug_numbers).values_list('bug_id'))
-
-        for bug_number in bug_numbers - existing_maps:
-            BugJobMap.objects.create(job_id=job.id, bug_id=bug_number, user=user)
-
-        # if user is not specified, then this is an autoclassified job note and
-        # we should mark it as such
-        classification_name = 'intermittent' if user else 'autoclassified intermittent'
-        classification = FailureClassification.objects.get(name=classification_name)
-
-        return JobNote.objects.create(
-            job=job, failure_classification=classification, user=user, text=""
         )
 
 
@@ -992,19 +905,6 @@ class FailureLine(models.Model):
     stackwalk_stdout = models.TextField(blank=True, null=True)
     stackwalk_stderr = models.TextField(blank=True, null=True)
 
-    # Note that the case of best_classification = None and best_is_verified = True
-    # has the special semantic that the line is ignored and should not be considered
-    # for future autoclassifications.
-    best_classification = models.ForeignKey(
-        "ClassifiedFailure",
-        related_name="best_for_lines",
-        null=True,
-        db_index=True,
-        on_delete=models.SET_NULL,
-    )
-
-    best_is_verified = models.BooleanField(default=False)
-
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
@@ -1021,14 +921,6 @@ class FailureLine(models.Model):
 
     def __str__(self):
         return "{0} {1}".format(self.id, Job.objects.get(guid=self.job_guid).id)
-
-    @property
-    def error(self):
-        # Return the related text-log-error or None if there is no related field.
-        try:
-            return self.text_log_error_metadata.text_log_error
-        except TextLogErrorMetadata.DoesNotExist:
-            return None
 
     def _serialized_components(self):
         if self.action == "test_result":
@@ -1061,11 +953,6 @@ class FailureLine(models.Model):
         return rv
 
     def to_dict(self):
-        try:
-            metadata = self.text_log_error_metadata
-        except ObjectDoesNotExist:
-            metadata = None
-
         return {
             'id': self.id,
             'job_guid': self.job_guid,
@@ -1083,8 +970,6 @@ class FailureLine(models.Model):
             'stack': self.stack,
             'stackwalk_stdout': self.stackwalk_stdout,
             'stackwalk_stderr': self.stackwalk_stderr,
-            'best_classification': metadata.best_classification_id if metadata else None,
-            'best_is_verified': metadata.best_is_verified if metadata else False,
             'created': self.created,
             'modified': self.modified,
         }
@@ -1132,97 +1017,6 @@ class Group(models.Model):
 
     class Meta:
         db_table = 'group'
-
-
-class ClassifiedFailure(models.Model):
-    """
-    Classifies zero or more TextLogErrors as a failure.
-
-    Optionally linked to a bug.
-    """
-
-    id = models.BigAutoField(primary_key=True)
-    text_log_errors = models.ManyToManyField(
-        "TextLogError", through='TextLogErrorMatch', related_name='classified_failures'
-    )
-    # Note that we use a bug number of 0 as a sentinel value to indicate lines that
-    # are not actually symptomatic of a real bug, but are still possible to autoclassify
-    bug_number = models.PositiveIntegerField(blank=True, null=True, unique=True)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return "{0} {1}".format(self.id, self.bug_number)
-
-    def bug(self):
-        # Putting this here forces one query per object; there should be a way
-        # to make things more efficient
-        return Bugscache.objects.filter(id=self.bug_number).first()
-
-    def set_bug(self, bug_number):
-        """
-        Set the bug number of this Classified Failure
-
-        If an existing ClassifiedFailure exists with the same bug number
-        replace this instance with the existing one.
-        """
-        if bug_number == self.bug_number:
-            return self
-
-        other = ClassifiedFailure.objects.filter(bug_number=bug_number).first()
-        if not other:
-            self.bug_number = bug_number
-            self.save(update_fields=['bug_number'])
-            return self
-
-        self.replace_with(other)
-
-        return other
-
-    @transaction.atomic
-    def replace_with(self, other):
-        """
-        Replace this instance with the given other.
-
-        Deletes stale Match objects and updates related TextLogErrorMetadatas'
-        best_classifications to point to the given other.
-        """
-        match_ids_to_delete = list(self.update_matches(other))
-        TextLogErrorMatch.objects.filter(id__in=match_ids_to_delete).delete()
-
-        # Update best classifications
-        self.best_for_errors.update(best_classification=other)
-
-        self.delete()
-
-    def update_matches(self, other):
-        """
-        Update this instance's Matches to point to the given other's Matches.
-
-        Find Matches with the same TextLogError as our Matches, updating their
-        score if less than ours and mark our matches for deletion.
-
-        If there are no other matches, update ours to point to the other
-        ClassifiedFailure.
-        """
-        for match in self.error_matches.all():
-            other_matches = TextLogErrorMatch.objects.filter(
-                classified_failure=other, text_log_error=match.text_log_error,
-            )
-
-            if not other_matches:
-                match.classified_failure = other
-                match.save(update_fields=['classified_failure'])
-                continue
-
-            # if any of our matches have higher scores than other's matches,
-            # overwrite with our score.
-            other_matches.filter(score__lt=match.score).update(score=match.score)
-
-            yield match.id  # for deletion
-
-    class Meta:
-        db_table = 'classified_failure'
 
 
 class TextLogStep(models.Model):
@@ -1288,127 +1082,7 @@ class TextLogError(models.Model):
     def __str__(self):
         return "{0} {1}".format(self.id, self.step.job.id)
 
-    @property
-    def metadata(self):
-        try:
-            return self._metadata
-        except TextLogErrorMetadata.DoesNotExist:
-            return None
-
     def bug_suggestions(self):
         from treeherder.model import error_summary
 
         return error_summary.bug_suggestions_line(self)
-
-    def create_match(self, matcher_name, classification):
-        """
-        Create a TextLogErrorMatch instance
-
-        Typically used for manual "matches" or tests.
-        """
-        if classification is None:
-            classification = ClassifiedFailure.objects.create()
-
-        TextLogErrorMatch.objects.create(
-            text_log_error=self,
-            classified_failure=classification,
-            matcher_name=matcher_name,
-            score=1,
-        )
-
-    def verify_classification(self, classification):
-        """
-        Mark the given ClassifiedFailure as verified.
-
-        Handles the classification not currently being related to this
-        TextLogError and no Metadata existing.
-        """
-        if classification not in self.classified_failures.all():
-            self.create_match("ManualDetector", classification)
-
-        # create a TextLogErrorMetadata instance for this TextLogError if it
-        # doesn't exist.  We can't use update_or_create here since OneToOne
-        # relations don't use an object manager so a missing relation is simply
-        # None as opposed to RelatedManager.
-        if self.metadata is None:
-            TextLogErrorMetadata.objects.create(
-                text_log_error=self, best_classification=classification, best_is_verified=True
-            )
-        else:
-            self.metadata.best_classification = classification
-            self.metadata.best_is_verified = True
-            self.metadata.save(update_fields=['best_classification', 'best_is_verified'])
-
-        # Send event to NewRelic when a verifing an autoclassified failure.
-        match = self.matches.filter(classified_failure=classification).first()
-        if not match:
-            return
-
-        newrelic.agent.record_custom_event(
-            'user_verified_classification', {'matcher': match.matcher_name, 'job_id': self.id,}
-        )
-
-    def get_failure_line(self):
-        """Get a related FailureLine instance if one exists."""
-        try:
-            return self.metadata.failure_line
-        except AttributeError:
-            return None
-
-
-class TextLogErrorMetadata(models.Model):
-    """
-    Link matching TextLogError and FailureLine instances.
-
-    Tracks best classification and verificiation of a classification.
-
-    TODO: Merge into TextLogError.
-    """
-
-    text_log_error = models.OneToOneField(
-        TextLogError, primary_key=True, related_name="_metadata", on_delete=models.CASCADE
-    )
-
-    failure_line = models.OneToOneField(
-        FailureLine, on_delete=models.CASCADE, related_name="text_log_error_metadata", null=True
-    )
-
-    # Note that the case of best_classification = None and best_is_verified = True
-    # has the special semantic that the line is ignored and should not be considered
-    # for future autoclassifications.
-    best_classification = models.ForeignKey(
-        ClassifiedFailure, related_name="best_for_errors", null=True, on_delete=models.SET_NULL
-    )
-    best_is_verified = models.BooleanField(default=False)
-
-    class Meta:
-        db_table = "text_log_error_metadata"
-
-    def __str__(self):
-        args = (self.text_log_error_id, self.failure_line_id)
-        return 'TextLogError={} FailureLine={}'.format(*args)
-
-
-class TextLogErrorMatch(models.Model):
-    """Association table between TextLogError and ClassifiedFailure, containing
-    additional data about the association including the matcher that was used
-    to create it and a score in the range 0-1 for the goodness of match."""
-
-    id = models.BigAutoField(primary_key=True)
-    text_log_error = models.ForeignKey(
-        TextLogError, related_name="matches", on_delete=models.CASCADE
-    )
-    classified_failure = models.ForeignKey(
-        ClassifiedFailure, related_name="error_matches", on_delete=models.CASCADE
-    )
-
-    matcher_name = models.CharField(max_length=255)
-    score = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
-
-    class Meta:
-        db_table = 'text_log_error_match'
-        verbose_name_plural = 'text log error matches'
-        unique_together = ('text_log_error', 'classified_failure', 'matcher_name')
-
-    def __str__(self):
-        return "{0} {1}".format(self.text_log_error.id, self.classified_failure.id)
