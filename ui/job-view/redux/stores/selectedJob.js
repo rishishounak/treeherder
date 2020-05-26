@@ -171,7 +171,6 @@ const doSetSelectedJobFromQueryString = (notify, jobMap) => {
   // We are attempting to select a task, but that task is not in the current
   // range of pushes.  So we search for it in the database to help the user
   // locate it.
-  console.log(taskId, runId);
   if (taskId || selectedJobId) {
     const jobParams = taskId
       ? { task_id: taskId, retry_id: runId }
