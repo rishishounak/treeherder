@@ -248,11 +248,7 @@ LOGGING = {
             'propagate': True,
         },
         'django.request': {'handlers': ['console'], 'level': 'WARNING', 'propagate': True,},
-        'treeherder': {
-            'handlers': ['console'],
-            'level': LOGGING_LEVEL,
-            'propagate': LOGGING_LEVEL != 'WARNING',
-        },
+        'treeherder': {'handlers': ['console'], 'level': LOGGING_LEVEL, 'propagate': True,},
         'kombu': {'handlers': ['console'], 'level': 'WARNING',},
     },
 }
