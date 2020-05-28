@@ -10,7 +10,12 @@ import {
   UncontrolledCollapse,
 } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRedo } from '@fortawesome/free-solid-svg-icons';
+import {
+  faRedo,
+  faCaretRight,
+  faCaretDown,
+} from '@fortawesome/free-solid-svg-icons';
+import { LazyLog } from 'react-lazylog';
 
 import JobModel from '../models/job';
 
@@ -47,7 +52,6 @@ class TestFailure extends React.PureComponent {
     const { failure, repo, revision, groupedBy } = this.props;
     const {
       testName,
-      action,
       jobGroup,
       jobGroupSymbol,
       inProgressJobs,
@@ -63,6 +67,7 @@ class TestFailure extends React.PureComponent {
       tier,
       passFailRatio,
       failedInParent,
+      rawLogUrl,
     } = failure;
     const { detailsShowing } = this.state;
 
@@ -79,26 +84,30 @@ class TestFailure extends React.PureComponent {
           >
             <FontAwesomeIcon icon={faRedo} title="Retrigger" />
           </Button>
-          {groupedBy !== 'platform' && (
-            <span>
-              {platform} {config}:
-            </span>
-          )}
-          <span
-            className="mx-1 px-1 border border-secondary rounded"
-            title={jobGroup}
+          <Button
+            id={key}
+            className="border-0 text-darker-info btn-sm w-5 px-2 mx-2"
+            outline
+            onClick={this.toggleDetails}
           >
+            <FontAwesomeIcon
+              icon={detailsShowing ? faCaretDown : faCaretRight}
+              style={{ minWidth: '1em' }}
+              className="mr-1"
+            />
+            {groupedBy !== 'platform' && (
+              <span>
+                {platform} {config}:
+              </span>
+            )}
+          </Button>
+          <span className="ml-2" title={jobGroup}>
             {jobGroupSymbol}
           </span>
           {tier > 1 && (
             <span className="ml-1 small text-muted">[tier-{tier}]</span>
           )}
-          <span
-            color="text-darker-secondary"
-            className="text-uppercase ml-1 mr-1"
-          >
-            {action} :
-          </span>
+          (
           {failJobs.map((failJob) => (
             <Job
               job={failJob}
@@ -139,16 +148,9 @@ class TestFailure extends React.PureComponent {
               key={inProgressJob.id}
             />
           ))}
+          <span className="ml-1">)</span>
           {!!logLines.length && (
             <span>
-              <Button
-                id={key}
-                className="border-0 text-darker-info btn-sm p-1"
-                outline
-                onClick={this.toggleDetails}
-              >
-                {detailsShowing ? 'less...' : 'more...'}
-              </Button>
               <UncontrolledCollapse toggler={key} data-testid="log-lines">
                 {logLines.map((logLine) => (
                   <Row className="small mt-2" key={logLine.line_number}>
@@ -186,6 +188,19 @@ class TestFailure extends React.PureComponent {
                           </Row>
                         )}
                       </Col>
+                      <div className="log-contents flex-fill">
+                        <LazyLog
+                          url={rawLogUrl}
+                          scrollToLine={logLine.line_number}
+                          // highlight={highlight}
+                          selectableLines
+                          onHighlight={this.onHighlight}
+                          // onLoad={() => this.scrollHighlightToTop(highlight)}
+                          highlightLineClassName="yellow-highlight"
+                          rowHeight={13}
+                          extraLines={3}
+                        />
+                      </div>
                     </Container>
                   </Row>
                 ))}

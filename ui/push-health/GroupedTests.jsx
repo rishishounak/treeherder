@@ -1,10 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { Badge, Button, UncontrolledCollapse } from 'reactstrap';
+import { Badge, Button, Col, UncontrolledCollapse } from 'reactstrap';
 import groupBy from 'lodash/groupBy';
 import orderBy from 'lodash/orderBy';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCaretDown } from '@fortawesome/free-solid-svg-icons';
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
 import Clipboard from '../shared/Clipboard';
 
@@ -16,6 +16,7 @@ class GroupedTests extends PureComponent {
 
     this.state = {
       clipboardVisible: null,
+      detailsShowing: false,
     };
   }
 
@@ -38,6 +39,12 @@ class GroupedTests extends PureComponent {
     this.setState({ clipboardVisible: key });
   };
 
+  toggleDetails = () => {
+    this.setState((prevState) => ({
+      detailsShowing: !prevState.detailsShowing,
+    }));
+  };
+
   render() {
     const {
       group,
@@ -48,7 +55,7 @@ class GroupedTests extends PureComponent {
       orderedBy,
       groupedBy,
     } = this.props;
-    const { clipboardVisible } = this.state;
+    const { clipboardVisible, detailsShowing } = this.state;
 
     const groupedTests = this.getGroupedTests(group);
     const groupedArray = Object.entries(groupedTests).map(([key, tests]) => ({
@@ -68,21 +75,22 @@ class GroupedTests extends PureComponent {
           sortedGroups.map((group) => (
             <div key={group.id} data-testid="test-grouping">
               <span
-                className="d-flex border-top w-100 bg-light p-2 border-top-1 border-secondary justify-content-center rounded"
+                className="d-flex border-top w-100 bg-light p-2 border-top-1 border-secondary rounded"
                 onMouseEnter={() => this.setClipboardVisible(group.key)}
                 onMouseLeave={() => this.setClipboardVisible(null)}
               >
-                <Clipboard
-                  text={group.key}
-                  description="group text"
-                  visible={clipboardVisible === group.key}
-                />
                 <Button
                   id={`group-${group.id}`}
-                  className="text-center text-break text-wrap text-monospace border-0"
+                  className="text-break text-wrap text-monospace border-0"
                   title="Click to expand for test detail"
                   outline
+                  onClick={this.toggleDetails}
                 >
+                  <FontAwesomeIcon
+                    icon={detailsShowing ? faCaretDown : faCaretRight}
+                    style={{ 'min-width': '1em' }}
+                    className="mr-1"
+                  />
                   {group.key === 'none' ? 'All' : group.key} -
                   <span className="ml-2 font-italic">
                     {group.tests.length} test{group.tests.length > 1 && 's'}
@@ -92,8 +100,12 @@ class GroupedTests extends PureComponent {
                       {group.failedInParent} from parent
                     </Badge>
                   )}
-                  <FontAwesomeIcon icon={faCaretDown} className="ml-1" />
                 </Button>
+                <Clipboard
+                  text={group.key}
+                  description="group text"
+                  visible={clipboardVisible === group.key}
+                />
               </span>
 
               <UncontrolledCollapse toggler={`group-${group.id}`}>

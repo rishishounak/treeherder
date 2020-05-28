@@ -116,6 +116,7 @@ def get_current_test_failures(push, option_map):
         if not test_name:
             continue
         job = failure_line.job_log.job
+        raw_log_url = failure_line.job_log.url
         config = clean_config(option_map[job.option_collection_hash])
         platform = clean_platform(job.machine_platform.platform)
         job_name = job.job_type.name
@@ -141,6 +142,7 @@ def get_current_test_failures(push, option_map):
                 'config': config,
                 'key': test_key,
                 'jobKey': job.job_key,
+                'rawLogUrl': raw_log_url,
                 'inProgressJobs': [],
                 'failJobs': [],
                 'passJobs': [],
