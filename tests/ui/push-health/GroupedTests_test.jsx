@@ -2,14 +2,14 @@ import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 
 import pushHealth from '../mock/push_health';
-import GroupedTests from '../../../ui/push-health/GroupedTests';
+import TestGroup from '../../../ui/push-health/TestGroup';
 
 const tests = pushHealth.metrics.tests.details.needInvestigation;
 const repoName = 'autoland';
 
 describe('GroupedTests', () => {
   const testGroupedTests = (tests, groupedBy, orderedBy) => (
-    <GroupedTests
+    <TestGroup
       group={tests}
       repo={repoName}
       revision={pushHealth.revision}

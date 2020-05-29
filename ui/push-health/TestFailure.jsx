@@ -7,7 +7,11 @@ import {
   Row,
   Col,
   UncontrolledTooltip,
-  UncontrolledCollapse,
+  TabContent,
+  TabPane,
+  Nav,
+  NavItem,
+  NavLink,
 } from 'reactstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -33,6 +37,7 @@ class TestFailure extends React.PureComponent {
 
     this.state = {
       detailsShowing: false,
+      activeTab: 0,
     };
   }
 
@@ -46,6 +51,15 @@ class TestFailure extends React.PureComponent {
     const { notify, currentRepo } = this.props;
 
     JobModel.retrigger([job], currentRepo, notify);
+  };
+
+  clickJob = (ev) => {
+    console.log(ev);
+    this.setState({ detailsShowing: true });
+  };
+
+  setActiveTab = (id) => {
+    this.setState({ activeTab: id });
   };
 
   render() {
@@ -69,7 +83,13 @@ class TestFailure extends React.PureComponent {
       failedInParent,
       rawLogUrl,
     } = failure;
-    const { detailsShowing } = this.state;
+    const { detailsShowing, activeTab } = this.state;
+    const jobList = [
+      ...failJobs,
+      ...passJobs,
+      ...passInFailedJobs,
+      ...inProgressJobs,
+    ];
 
     return (
       <Row className="border-top m-3" key={key}>
@@ -107,105 +127,94 @@ class TestFailure extends React.PureComponent {
           {tier > 1 && (
             <span className="ml-1 small text-muted">[tier-{tier}]</span>
           )}
-          (
-          {failJobs.map((failJob) => (
-            <Job
-              job={failJob}
-              repo={repo}
-              revision={revision}
-              key={failJob.id}
-            />
-          ))}
-          {passJobs.map((passJob) => (
-            <Job
-              job={passJob}
-              repo={repo}
-              revision={revision}
-              key={passJob.id}
-            />
-          ))}
-          {!!passInFailedJobs.length && (
-            <span
-              className="text-success mr-1"
-              title="The following jobs failed overall, but this test did not fail in them"
-            >
-              Passed in:
-            </span>
-          )}
-          {passInFailedJobs.map((passedInAFailedJob) => (
-            <Job
-              job={passedInAFailedJob}
-              repo={repo}
-              revision={revision}
-              key={passedInAFailedJob.id}
-            />
-          ))}
-          {inProgressJobs.map((inProgressJob) => (
-            <Job
-              job={inProgressJob}
-              repo={repo}
-              revision={revision}
-              key={inProgressJob.id}
-            />
-          ))}
-          <span className="ml-1">)</span>
-          {!!logLines.length && (
-            <span>
-              <UncontrolledCollapse toggler={key} data-testid="log-lines">
-                {logLines.map((logLine) => (
-                  <Row className="small mt-2" key={logLine.line_number}>
-                    <Container className="pre-wrap text-break">
-                      {logLine.subtest}
-                      <Col>
-                        {logLine.message && (
-                          <Row className="mb-3">
-                            <Col xs="1" className="font-weight-bold">
-                              Message:
-                            </Col>
-                            <Col className="text-monospace">
-                              {logLine.message}
-                            </Col>
-                          </Row>
-                        )}
-                        {logLine.signature && (
-                          <Row className="mb-3">
-                            <Col xs="1" className="font-weight-bold">
-                              Signature:
-                            </Col>
-                            <Col className="text-monospace">
-                              {logLine.signature}
-                            </Col>
-                          </Row>
-                        )}
-                        {logLine.stackwalk_stdout && (
-                          <Row className="mb-3">
-                            <Col xs="1" className="font-weight-bold">
-                              Stack
-                            </Col>
-                            <Col className="text-monospace">
-                              {logLine.stackwalk_stdout}
-                            </Col>
-                          </Row>
-                        )}
-                      </Col>
-                      <div className="log-contents flex-fill">
-                        <LazyLog
-                          url={rawLogUrl}
-                          scrollToLine={logLine.line_number}
-                          // highlight={highlight}
-                          selectableLines
-                          onHighlight={this.onHighlight}
-                          // onLoad={() => this.scrollHighlightToTop(highlight)}
-                          highlightLineClassName="yellow-highlight"
-                          rowHeight={13}
-                          extraLines={3}
-                        />
-                      </div>
-                    </Container>
-                  </Row>
+          {detailsShowing ? (
+            <React.Fragment>
+              (
+              <Nav tabs className="d-inline-flex">
+                {jobList.map((job) => (
+                  <NavItem key={job.id}>
+                    <NavLink onClick={() => this.setActiveTab(job.id)}>
+                      <Job job={job} />
+                    </NavLink>
+                  </NavItem>
                 ))}
-              </UncontrolledCollapse>
-            </span>
+              </Nav>
+              )
+              <TabContent activeTab={activeTab}>
+                {jobList.map((job) => (
+                  <TabPane tabId={job.id} key={job.id}>
+                    Yep
+                    {logLines.map((logLine) => (
+                      <Row className="small mt-2" key={logLine.line_number}>
+                        <Container className="pre-wrap text-break">
+                          {logLine.subtest}
+                          <Col>
+                            {logLine.message && (
+                              <Row className="mb-3">
+                                <Col xs="1" className="font-weight-bold">
+                                  Message:
+                                </Col>
+                                <Col className="text-monospace">
+                                  {logLine.message}
+                                </Col>
+                              </Row>
+                            )}
+                            {logLine.signature && (
+                              <Row className="mb-3">
+                                <Col xs="1" className="font-weight-bold">
+                                  Signature:
+                                </Col>
+                                <Col className="text-monospace">
+                                  {logLine.signature}
+                                </Col>
+                              </Row>
+                            )}
+                            {logLine.stackwalk_stdout && (
+                              <Row className="mb-3">
+                                <Col xs="1" className="font-weight-bold">
+                                  Stack
+                                </Col>
+                                <Col className="text-monospace">
+                                  {logLine.stackwalk_stdout}
+                                </Col>
+                              </Row>
+                            )}
+                          </Col>
+                          <div className="log-contents flex-fill">
+                            <LazyLog
+                              url={rawLogUrl}
+                              scrollToLine={logLine.line_number}
+                              // highlight={highlight}
+                              selectableLines
+                              onHighlight={this.onHighlight}
+                              // onLoad={() => this.scrollHighlightToTop(highlight)}
+                              highlightLineClassName="yellow-highlight"
+                              rowHeight={13}
+                              extraLines={3}
+                            />
+                          </div>
+                        </Container>
+                      </Row>
+                    ))}
+                  </TabPane>
+                ))}
+              </TabContent>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <span>(</span>
+              {jobList.map((job) => (
+                <Button
+                  outline
+                  className="border-0"
+                  onClick={this.clickJob}
+                  key={job.id}
+                >
+                  <Job job={job} key={job.id} />
+                </Button>
+              ))}
+              <span>)</span>
+            </React.Fragment>
           )}
         </Col>
         <span className="ml-1">

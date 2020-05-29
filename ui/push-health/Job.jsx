@@ -11,7 +11,7 @@ import logviewerIcon from '../img/logviewerIcon.svg';
 
 class Job extends PureComponent {
   render() {
-    const { job, repo, revision } = this.props;
+    const { job, repo, revision, asLink } = this.props;
     const {
       id,
       result,
@@ -22,6 +22,10 @@ class Job extends PureComponent {
       failedInParent,
     } = job;
     const resultStatus = state === 'completed' ? result : state;
+    const jobClass = `p-1 rounded ${getBtnClass(
+      result,
+      failureClassificationId,
+    )} border`;
 
     return (
       <span className="ml-1">
@@ -29,17 +33,22 @@ class Job extends PureComponent {
           autohide={false}
           text={
             <span>
-              <a
-                className={`p-1 rounded ${getBtnClass(
-                  result,
-                  failureClassificationId,
-                )} border`}
-                href={getJobsUrl({ selectedJob: job.id, repo, revision })}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {jobSymbol}
-              </a>
+              {!!repo && !!revision ? (
+                <a
+                  className={jobClass}
+                  href={
+                    asLink
+                      ? getJobsUrl({ selectedJob: job.id, repo, revision })
+                      : '#'
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {jobSymbol}
+                </a>
+              ) : (
+                <span className={jobClass}>{jobSymbol}</span>
+              )}
               {failureClassificationId !== 1 && (
                 <FontAwesomeIcon
                   icon={faStar}
@@ -93,8 +102,13 @@ Job.propTypes = {
     job_type_name: PropTypes.string.isRequired,
     job_type_symbol: PropTypes.string.isRequired,
   }).isRequired,
-  repo: PropTypes.string.isRequired,
-  revision: PropTypes.string.isRequired,
+  repo: PropTypes.string,
+  revision: PropTypes.string,
+};
+
+Job.defaultProps = {
+  repo: null,
+  revision: null,
 };
 
 export default Job;
