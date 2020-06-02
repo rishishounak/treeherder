@@ -116,38 +116,21 @@ def get_current_test_failures(push, option_map):
         if not test_name:
             continue
         job = failure_line.job_log.job
-        raw_log_url = failure_line.job_log.url
         config = clean_config(option_map[job.option_collection_hash])
         platform = clean_platform(job.machine_platform.platform)
-        job_name = job.job_type.name
-        job_symbol = job.job_type.symbol
-        job_group = job.job_group.name
-        job_group_symbol = job.job_group.symbol
-        job.job_key = '{}{}{}{}'.format(config, platform, job_name, job_group)
+        # raw_log_url = failure_line.job_log.url
         all_failed_jobs[job.id] = job
         # The 't' ensures the key starts with a character, as required for a query selector
-        test_key = re.sub(
-            r'\W+', '', 't{}{}{}{}{}'.format(test_name, config, platform, job_name, job_group)
-        )
+        test_key = re.sub(r'\W+', '', 't{}{}{}'.format(test_name, config, platform))
 
         if test_key not in tests:
             line = {
                 'testName': test_name,
                 'action': failure_line.action.split('_')[0],
-                'jobName': job_name,
-                'jobSymbol': job_symbol,
-                'jobGroup': job_group,
-                'jobGroupSymbol': job_group_symbol,
                 'platform': platform,
                 'config': config,
                 'key': test_key,
-                'jobKey': job.job_key,
-                'rawLogUrl': raw_log_url,
-                'inProgressJobs': [],
-                'failJobs': [],
-                'passJobs': [],
-                'passInFailedJobs': [],  # This test passed in a job that failed for another test
-                'logLines': [],
+                'jobs': [],
                 'suggestedClassification': 'New Failure',
                 'confidence': 0,
                 'tier': job.tier,
@@ -158,16 +141,16 @@ def get_current_test_failures(push, option_map):
         # This ``test`` was either just added above, or already existed in the ``tests``
         # list in a previous iteration through ``failure_lines``
         test = tests[test_key]
-        if not has_line(failure_line, test['logLines']):
-            test['logLines'].append(failure_line.to_mozlog_format())
+        # if not has_line(failure_line, test['logLines']):
+        #     test['logLines'].append(failure_line.to_mozlog_format())
 
-        if not has_job(job, test['failJobs']):
-            test['failJobs'].append(job_to_dict(job))
+        if not has_job(job, test['jobs']):
+            test['jobs'].append(job_to_dict(job, config))
 
     # Check each test to find jobs where it passed, even if the job itself failed due to another test
     for test in tests.values():
         for failed_job in all_failed_jobs.values():
-            if not has_job(failed_job, test['failJobs']) and test['jobKey'] == failed_job.job_key:
+            if not has_job(failed_job, test['jobs']) and test['jobKey'] == failed_job.job_key:
                 test['passInFailedJobs'].append(job_to_dict(failed_job))
 
     # filter out testfailed jobs that are supported by failureline to get unsupported jobs

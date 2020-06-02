@@ -3,6 +3,7 @@ from itertools import groupby
 from django.db.models import Q
 
 from treeherder.model.models import Job
+from treeherder.webapp.api.serializers import JobSerializer
 
 job_fields = [
     'id',
@@ -98,14 +99,24 @@ def get_job_key(job):
 
 
 def job_to_dict(job):
-    job_dict = {field: getattr(job, field) for field in job_fields}
+    job_dict = JobSerializer(job).data
+    type_name = job.job_type.name
+    type_symbol = job.job_type.symbol
+    platform = job.machine_platform.platform
+
+    # Should return the text_log_failures as well so we can display them in the UI.
+    # Perhaps the same bug suggestions as TH.  Probably not bug suggestions for devs.
+    # But get the same failure lines that the log viewer gets.
     job_dict.update(
         {
-            'job_type_name': job.job_type.name,
-            'job_type_symbol': job.job_type.symbol,
-            'platform': job.machine_platform.platform,
+            'type_name': type_name,
+            'type_symbol': type_symbol,
+            'platform': platform,
             'task_id': job.taskcluster_metadata.task_id,
             'run_id': job.taskcluster_metadata.retry_id,
+            'key': '{}{}{}{}'.format(
+                platform, type_name, job.job_group.name, job.option_collection_hash
+            ),
         }
     )
     return job_dict
