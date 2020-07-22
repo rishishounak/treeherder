@@ -3,7 +3,7 @@
 // https://github.com/mozilla/treeherder/blob/master/treeherder/middleware.py
 import tcLibUrls from 'taskcluster-lib-urls';
 
-export const uiJobsUrlBase = '/#/jobs';
+export const uiJobsUrlBase = '/jobs';
 
 export const uiPushHealthBase = '/pushhealth.html';
 
@@ -21,7 +21,7 @@ export const graphsEndpoint = '/failurecount/';
 
 export const deployedRevisionUrl = '/revision.txt';
 
-export const loginCallbackUrl = '/login.html';
+export const loginCallbackUrl = '/login';
 
 export const platformsEndpoint = '/machineplatforms/';
 
@@ -29,7 +29,7 @@ export const pushEndpoint = '/push/';
 
 export const repoEndpoint = '/repository/';
 
-export const tcAuthCallbackUrl = '/taskcluster-auth.html';
+export const tcAuthCallbackUrl = '/taskcluster-auth';
 
 export const textLogErrorsEndpoint = '/text_log_errors/';
 
