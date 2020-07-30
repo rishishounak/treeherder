@@ -53,7 +53,7 @@ export default class ComparePageTitle extends React.Component {
   changeQueryParam = (newTitle) => {
     const params = getAllUrlParams();
     params.set('pageTitle', newTitle);
-    replaceLocation(params, '/compare');
+    replaceLocation(params);
   };
 
   userActionListener = async (event) => {
