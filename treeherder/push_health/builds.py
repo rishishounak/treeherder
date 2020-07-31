@@ -1,4 +1,4 @@
-from treeherder.model.models import Job
+from treeherder.model.models import Job, JobType
 from treeherder.push_health.utils import mark_failed_in_parent, job_to_dict
 
 
@@ -13,3 +13,10 @@ def get_build_failures(push, parent_push=None):
         mark_failed_in_parent(failures, get_build_failures(parent_push))
 
     return failures
+
+
+def get_build_in_progress_count(push):
+    build_types = JobType.objects.filter(name__contains="build")
+    return Job.objects.filter(
+        push=push, tier__lte=2, result='unknown', job_type__in=build_types,
+    ).count()

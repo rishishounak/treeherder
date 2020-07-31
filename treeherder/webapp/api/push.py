@@ -9,10 +9,10 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from treeherder.model.models import Job, JobType, Push, Repository
-from treeherder.push_health.builds import get_build_failures
 from treeherder.push_health.compare import get_commit_history
-from treeherder.push_health.linting import get_lint_failures
-from treeherder.push_health.tests import get_test_failures, get_test_failure_jobs
+from treeherder.push_health import builds
+from treeherder.push_health import linting
+from treeherder.push_health import tests
 from treeherder.push_health.usage import get_usage
 from treeherder.webapp.api.serializers import PushSerializer
 from treeherder.webapp.api.utils import to_datetime, to_timestamp
@@ -211,11 +211,11 @@ class PushViewSet(viewsets.ViewSet):
                 "No push with revision: {0}".format(revision), status=HTTP_404_NOT_FOUND
             )
 
-        jobs = get_test_failure_jobs(push)
+        jobs = tests.get_test_failure_jobs(push)
 
-        push_health_test_failures = get_test_failures(push, jobs)
-        push_health_lint_failures = get_lint_failures(push)
-        push_health_build_failures = get_build_failures(push)
+        push_health_test_failures = tests.get_test_failures(push, jobs)
+        push_health_lint_failures = linting.get_lint_failures(push)
+        push_health_build_failures = builds.get_build_failures(push)
         test_failure_count = len(push_health_test_failures['needInvestigation'])
         build_failure_count = len(push_health_build_failures)
         lint_failure_count = len(push_health_lint_failures)
@@ -223,8 +223,11 @@ class PushViewSet(viewsets.ViewSet):
         return Response(
             {
                 'testFailureCount': test_failure_count,
+                'testInProgressCount': tests.get_test_in_progress_count(push),
                 'buildFailureCount': build_failure_count,
+                'buildInProgressCount': builds.get_build_in_progress_count(push),
                 'lintFailureCount': lint_failure_count,
+                'lintingInProgressCount': linting.get_lint_in_progress_count(push),
                 'needInvestigation': test_failure_count + build_failure_count + lint_failure_count,
             }
         )
@@ -251,7 +254,7 @@ class PushViewSet(viewsets.ViewSet):
 
         commit_history_details = None
         parent_push = None
-        jobs = get_test_failure_jobs(push)
+        jobs = tests.get_test_failure_jobs(push)
         # Parent compare only supported for Hg at this time.
         # Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1612645
         if repository.dvcs_type == 'hg':
@@ -259,15 +262,15 @@ class PushViewSet(viewsets.ViewSet):
             if commit_history_details['exactMatch']:
                 parent_push = commit_history_details.pop('parentPush')
 
-        push_health_test_failures = get_test_failures(push, jobs, parent_push,)
+        push_health_test_failures = tests.get_test_failures(push, jobs, parent_push,)
         test_result = 'pass'
         if len(push_health_test_failures['needInvestigation']):
             test_result = 'fail'
 
-        build_failures = get_build_failures(push, parent_push)
+        build_failures = builds.get_build_failures(push, parent_push)
         build_result = 'fail' if len(build_failures) else 'pass'
 
-        lint_failures = get_lint_failures(push)
+        lint_failures = linting.get_lint_failures(push)
         lint_result = 'fail' if len(lint_failures) else 'pass'
 
         push_result = 'pass'
