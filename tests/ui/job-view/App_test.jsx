@@ -183,27 +183,6 @@ describe('App', () => {
     </Provider>
   );
 
-  test('changing repo updates ``currentRepo``', async () => {
-    const store = configureStore();
-    const { getByText, getByTitle } = render(testApp(store));
-
-    const autolandRevision = await waitFor(() => getByText('ba9c692786e9'));
-    expect(autolandRevision).toBeInTheDocument();
-
-    const reposButton = await waitFor(() => getByTitle('Watch a repo'));
-    fireEvent.click(reposButton);
-
-    const tryRepo = await waitFor(() => getByText('try'));
-    fireEvent.click(tryRepo);
-
-    await waitFor(() => getByText('333333333333'));
-
-    expect(autolandRevision).not.toBeInTheDocument();
-    expect(document.querySelector('.revision a').getAttribute('href')).toBe(
-      'https://hg.mozilla.org/try/rev/3333333333335143b8df3f4b3e9b504dfbc589a0',
-    );
-  });
-
   test('should have links to Perfherder and Intermittent Failures View', async () => {
     const store = configureStore();
     const { getByText, getByAltText } = render(testApp(store));
@@ -248,51 +227,72 @@ describe('App', () => {
     return true;
   };
 
-  // test('right arrow key should select next job', async () => {
-  //   expect(
-  //     await testChangingSelectedJob(
-  //       { key: 'ArrowRight', keyCode: 39 },
-  //       'yaml',
-  //       'O5YBAWwxRfuZ_UlRJS5Rqg',
-  //       'B',
-  //       'secondTaskId',
-  //     ),
-  //   ).toBe(true);
-  // });
+  test('right arrow key should select next job', async () => {
+    expect(
+      await testChangingSelectedJob(
+        { key: 'ArrowRight', keyCode: 39 },
+        'yaml',
+        'O5YBAWwxRfuZ_UlRJS5Rqg',
+        'B',
+        'secondTaskId',
+      ),
+    ).toBe(true);
+  });
 
-  // test('left arrow key should select previous job', async () => {
-  //   expect(
-  //     await testChangingSelectedJob(
-  //       { key: 'ArrowLeft', keyCode: 37 },
-  //       'Meh',
-  //       'MirsMc8UQPeSBC3yKMSlPw',
-  //       'Cpp',
-  //       'Fe4GqwoZQSStNUbe4EeSPQ',
-  //     ),
-  //   ).toBe(true);
-  // });
+  test('left arrow key should select previous job', async () => {
+    expect(
+      await testChangingSelectedJob(
+        { key: 'ArrowLeft', keyCode: 37 },
+        'Meh',
+        'MirsMc8UQPeSBC3yKMSlPw',
+        'Cpp',
+        'Fe4GqwoZQSStNUbe4EeSPQ',
+      ),
+    ).toBe(true);
+  });
 
-  // test('n key should select next unclassified job', async () => {
-  //   expect(
-  //     await testChangingSelectedJob(
-  //       { key: 'n', keyCode: 78 },
-  //       'yaml',
-  //       'O5YBAWwxRfuZ_UlRJS5Rqg',
-  //       'B',
-  //       'secondTaskId',
-  //     ),
-  //   ).toBe(true);
-  // });
+  test('n key should select next unclassified job', async () => {
+    expect(
+      await testChangingSelectedJob(
+        { key: 'n', keyCode: 78 },
+        'yaml',
+        'O5YBAWwxRfuZ_UlRJS5Rqg',
+        'B',
+        'secondTaskId',
+      ),
+    ).toBe(true);
+  });
 
-  // test('p key should select previous unclassified job', async () => {
-  //   expect(
-  //     await testChangingSelectedJob(
-  //       { key: 'p', keyCode: 80 },
-  //       'yaml',
-  //       'O5YBAWwxRfuZ_UlRJS5Rqg',
-  //       'Meh',
-  //       'MirsMc8UQPeSBC3yKMSlPw',
-  //     ),
-  //   ).toBe(true);
-  // });
+  test('p key should select previous unclassified job', async () => {
+    expect(
+      await testChangingSelectedJob(
+        { key: 'p', keyCode: 80 },
+        'yaml',
+        'O5YBAWwxRfuZ_UlRJS5Rqg',
+        'Meh',
+        'MirsMc8UQPeSBC3yKMSlPw',
+      ),
+    ).toBe(true);
+  });
+
+  test('changing repo updates ``currentRepo``', async () => {
+    const store = configureStore();
+    const { getByText, getByTitle } = render(testApp(store));
+
+    const autolandRevision = await waitFor(() => getByText('ba9c692786e9'));
+    expect(autolandRevision).toBeInTheDocument();
+
+    const reposButton = await waitFor(() => getByTitle('Watch a repo'));
+    fireEvent.click(reposButton);
+
+    const tryRepo = await waitFor(() => getByText('try'));
+    fireEvent.click(tryRepo);
+
+    await waitFor(() => getByText('333333333333'));
+
+    expect(autolandRevision).not.toBeInTheDocument();
+    expect(document.querySelector('.revision a').getAttribute('href')).toBe(
+      'https://hg.mozilla.org/try/rev/3333333333335143b8df3f4b3e9b504dfbc589a0',
+    );
+  });
 });
