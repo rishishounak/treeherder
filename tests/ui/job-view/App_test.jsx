@@ -167,9 +167,9 @@ describe('App', () => {
     });
   });
 
-  // afterEach(() => {
-  //   window.location.search = `?repo=${repoName}`;
-  // });
+  afterEach(() => {
+    history.location.search = `?repo=${repoName}`;
+  });
 
   afterAll(() => {
     fetchMock.reset();
@@ -204,49 +204,49 @@ describe('App', () => {
     );
   });
 
-  // test('should have links to Perfherder and Intermittent Failures View', async () => {
-  //   const store = configureStore();
-  //   const { getByText, getByAltText } = render(testApp(store));
-  //   const appMenu = await waitFor(() => getByAltText('Treeherder'));
+  test('should have links to Perfherder and Intermittent Failures View', async () => {
+    const store = configureStore();
+    const { getByText, getByAltText } = render(testApp(store));
+    const appMenu = await waitFor(() => getByAltText('Treeherder'));
 
-  //   expect(appMenu).toBeInTheDocument();
-  //   fireEvent.click(appMenu);
+    expect(appMenu).toBeInTheDocument();
+    fireEvent.click(appMenu);
 
-  //   const phMenu = await waitFor(() => getByText('Perfherder'));
-  //   expect(phMenu.getAttribute('href')).toBe('/perf.html');
+    const phMenu = await waitFor(() => getByText('Perfherder'));
+    expect(phMenu.getAttribute('href')).toBe('/perfherder');
 
-  //   const ifvMenu = await waitFor(() =>
-  //     getByText('Intermittent Failures View'),
-  //   );
-  //   expect(ifvMenu.getAttribute('href')).toBe('/intermittent-failures.html');
-  // });
+    const ifvMenu = await waitFor(() =>
+      getByText('Intermittent Failures View'),
+    );
+    expect(ifvMenu.getAttribute('href')).toBe('/intermittent-failures');
+  });
 
-  // const testChangingSelectedJob = async (
-  //   keyDown,
-  //   firstJobSymbol,
-  //   firstJobTaskId,
-  //   secondJobSymbol,
-  //   secondJobTaskId,
-  // ) => {
-  //   const store = configureStore();
-  //   const { getByText, findByText, findByTestId } = render(testApp(store));
-  //   const firstJob = await findByText(firstJobSymbol);
+  const testChangingSelectedJob = async (
+    keyDown,
+    firstJobSymbol,
+    firstJobTaskId,
+    secondJobSymbol,
+    secondJobTaskId,
+  ) => {
+    const store = configureStore();
+    const { getByText, findByText, findByTestId } = render(testApp(store));
+    const firstJob = await findByText(firstJobSymbol);
 
-  //   fireEvent.mouseDown(firstJob);
+    fireEvent.mouseDown(firstJob);
 
-  //   expect(await findByTestId('summary-panel')).toBeInTheDocument();
-  //   await findByText(firstJobTaskId);
-  //   expect(firstJob).toHaveClass('selected-job');
+    expect(await findByTestId('summary-panel')).toBeInTheDocument();
+    await findByText(firstJobTaskId);
+    expect(firstJob).toHaveClass('selected-job');
 
-  //   fireEvent.keyDown(document.body, keyDown);
+    fireEvent.keyDown(document.body, keyDown);
 
-  //   const secondJob = getByText(secondJobSymbol);
-  //   const secondTaskId = await findByText(secondJobTaskId);
-  //   expect(secondJob).toHaveClass('selected-job');
-  //   expect(secondTaskId).toBeInTheDocument();
+    const secondJob = getByText(secondJobSymbol);
+    const secondTaskId = await findByText(secondJobTaskId);
+    expect(secondJob).toHaveClass('selected-job');
+    expect(secondTaskId).toBeInTheDocument();
 
-  //   return true;
-  // };
+    return true;
+  };
 
   // test('right arrow key should select next job', async () => {
   //   expect(
