@@ -4,27 +4,19 @@ import { Provider, ReactReduxContext } from 'react-redux';
 import { ConnectedRouter } from 'connected-react-router';
 import {
   render,
-  cleanup,
   waitFor,
   waitForElementToBeRemoved,
   fireEvent,
   getAllByTestId,
-  prettyDOM,
 } from '@testing-library/react';
+import { createBrowserHistory } from 'history';
 
-import {
-  getProjectUrl,
-  replaceLocation,
-  setUrlParam,
-} from '../../../ui/helpers/location';
+import { getProjectUrl, setUrlParam } from '../../../ui/helpers/location';
 import FilterModel from '../../../ui/models/filter';
 import pushListFixture from '../mock/push_list';
 import jobListFixtureOne from '../mock/job_list/job_1';
 import jobListFixtureTwo from '../mock/job_list/job_2';
-import {
-  configureStore,
-  history,
-} from '../../../ui/job-view/redux/configureStore';
+import { configureStore } from '../../../ui/job-view/redux/configureStore';
 import PushList from '../../../ui/job-view/pushes/PushList';
 import { getApiUrl } from '../../../ui/helpers/url';
 import { findJobInstance } from '../../../ui/helpers/job';
@@ -42,6 +34,8 @@ global.document.createRange = () => ({
 
 describe('PushList', () => {
   const repoName = 'autoland';
+  const history = createBrowserHistory();
+
   const currentRepo = {
     id: 4,
     repository_group: {
@@ -63,25 +57,7 @@ describe('PushList', () => {
     getRevisionHref: () => 'foo',
     getPushLogHref: () => 'foo',
   };
-  const testPushList = (store, filterModel) => (
-    <Provider store={store} context={ReactReduxContext}>
-      <ConnectedRouter history={history} context={ReactReduxContext}>
-        <div id="th-global-content">
-          <PushList
-            user={{ isLoggedIn: false }}
-            repoName={repoName}
-            currentRepo={currentRepo}
-            filterModel={filterModel}
-            duplicateJobsVisible={false}
-            groupCountsExpanded={false}
-            pushHealthVisibility="None"
-            getAllShownJobs={() => {}}
-            location={{ search: '' }}
-          />
-        </div>
-      </ConnectedRouter>
-    </Provider>
-  );
+
   const pushCount = () =>
     waitFor(() => getAllByTestId(document.body, 'push-header'));
 
@@ -125,30 +101,47 @@ describe('PushList', () => {
     );
   });
 
+  afterEach(() => history.push('/'));
+
   afterAll(() => {
     fetchMock.reset();
   });
 
-  afterEach(() => {
-    cleanup();
-    replaceLocation({});
-  });
-
+  const testPushList = () => {
+    const store = configureStore(history);
+    return (
+      <Provider store={store} context={ReactReduxContext}>
+        <ConnectedRouter history={history} context={ReactReduxContext}>
+          <div id="th-global-content">
+            <PushList
+              user={{ isLoggedIn: false }}
+              repoName={repoName}
+              currentRepo={currentRepo}
+              filterModel={new FilterModel()}
+              duplicateJobsVisible={false}
+              groupCountsExpanded={false}
+              pushHealthVisibility="None"
+              getAllShownJobs={() => {}}
+              location={{ search: '' }}
+            />
+          </div>
+        </ConnectedRouter>
+      </Provider>
+    );
+  };
   const push1Id = 'push-511138';
   const push2Id = 'push-511137';
   const push1Revision = 'ba9c692786e95143b8df3f4b3e9b504dfbc589a0';
   const push2Revision = 'd5b037941b0ebabcc9b843f24d926e9d65961087';
 
   test('should have 2 pushes', async () => {
-    const store = configureStore();
-    render(testPushList(store, new FilterModel()));
+    render(testPushList());
 
     expect(await pushCount()).toHaveLength(2);
   });
 
   test('should switch to single loaded revision and back to 2', async () => {
-    const store = configureStore();
-    const { getByTestId } = render(testPushList(store, new FilterModel()));
+    const { getByTestId } = render(testPushList());
 
     expect(await pushCount()).toHaveLength(2);
 
@@ -164,8 +157,7 @@ describe('PushList', () => {
   });
 
   test('should reload pushes when setting fromchange', async () => {
-    const store = configureStore();
-    const { getByTestId } = render(testPushList(store, new FilterModel()));
+    const { getByTestId } = render(testPushList());
 
     expect(await pushCount()).toHaveLength(2);
 
@@ -190,8 +182,7 @@ describe('PushList', () => {
   });
 
   test('should reload pushes when setting tochange', async () => {
-    const store = configureStore();
-    const { getByTestId } = render(testPushList(store, new FilterModel()));
+    const { getByTestId } = render(testPushList());
 
     expect(await pushCount()).toHaveLength(2);
 
@@ -216,10 +207,7 @@ describe('PushList', () => {
   });
 
   test('should load N more pushes when click next N', async () => {
-    const store = configureStore();
-    const { getByTestId, getAllByTestId } = render(
-      testPushList(store, new FilterModel()),
-    );
+    const { getByTestId, getAllByTestId } = render(testPushList());
     const nextNUrl = (count) =>
       getProjectUrl(`/push/?full=true&count=${count + 1}&push_timestamp__lte=`);
     const clickNext = (count) =>
@@ -268,8 +256,7 @@ describe('PushList', () => {
   });
 
   test('jobs should have fields required for retriggers', async () => {
-    const store = configureStore();
-    const { getByText } = render(testPushList(store, new FilterModel()));
+    const { getByText } = render(testPushList());
     const jobEl = await waitFor(() => getByText('yaml'));
     const jobInstance = findJobInstance(jobEl.getAttribute('data-job-id'));
     const { job } = jobInstance.props;
